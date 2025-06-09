@@ -1,0 +1,20 @@
+preprocess:
+  accumulation_cycle: 5
+  scan_cloud_filter_size: 0.25
+
+keyframe:
+  distance_th: 5.0
+  angle_th: 1000.0 # degree
+
+loop_closure:
+  num_loop_candidates: 10
+  loop_detection_distance_thresh: 30.0
+  error_average_th: 10.0
+  active_points_rate_th: 0.1
+  gicp_max_iteration: 5
+  gicp_epsilon: 0.1
+  gicp_max_correspondence_dist: 10.0
+  gicp_huber_delta: 0.1
+
+pose_graph:
+  huber_delta: 0.0001
