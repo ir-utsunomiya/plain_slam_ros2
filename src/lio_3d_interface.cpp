@@ -18,15 +18,15 @@
  *
  * For commercial licensing inquiries, please contact:
  *   Naoki Akai
- *   Email: n.akai.goo[at]gmail.com   ([at] → @)
+ *   Email: n.akai.goo[at]gmail.com   ([at] -> @)
  *   Subject: [plain_slam_ros2] Commercial License Inquiry
  */
 
-#include <plain_slam/lio_3d_lib.hpp>
+#include <plain_slam/lio_3d_interface.hpp>
 
 namespace pslam {
 
-LIO3DLib::LIO3DLib() {
+LIO3DInterface::LIO3DInterface() {
   localization_mode_ = false;
 
   imu_measures_ = boost::circular_buffer<IMUMeasure>(200);
@@ -51,11 +51,11 @@ LIO3DLib::LIO3DLib() {
   imu_odom_state_cov_ = imu_state_cov_;
 }
 
-LIO3DLib::~LIO3DLib() {
+LIO3DInterface::~LIO3DInterface() {
 
 }
 
-void LIO3DLib::ReadLIOParams() {
+void LIO3DInterface::ReadLIOParams() {
   const std::string yaml_file = param_files_dir_ + "/lio_3d_params.yaml";
   const YAML::Node config = YAML::LoadFile(yaml_file);
 
@@ -115,7 +115,7 @@ void LIO3DLib::ReadLIOParams() {
   joint_optimizer_.SetHuberDelta(huber_delta);
 }
 
-void LIO3DLib::SetScanCloud(
+void LIO3DInterface::SetScanCloud(
   const PointCloud3f& scan_cloud,
   const std::vector<float>& scan_intensities,
   const std::vector<double>& scan_stamps) {
@@ -187,6 +187,7 @@ void LIO3DLib::SetScanCloud(
   // vgf.filter(scan_cloud_, scan_intensities_, filtered_scan_cloud, filtered_scan_intensities);
 
   float active_points_rate;
+
   if (use_loose_coupling_) {
     imu_state_cov_ = StateCov::Identity();
     const float preint_time = preintegrator_.GetPreintegrationTime();
@@ -234,7 +235,7 @@ void LIO3DLib::SetScanCloud(
   }
 }
 
-void LIO3DLib::SetIMUMeasure(const IMUMeasure& measure) {
+void LIO3DInterface::SetIMUMeasure(const IMUMeasure& measure) {
   IMUMeasure m = measure;
   m.acc *= acc_scale_;
 
@@ -255,7 +256,7 @@ void LIO3DLib::SetIMUMeasure(const IMUMeasure& measure) {
   preintegrator_.Preintegration(m, imu_odom_state_, imu_odom_state_cov_);
 }
 
-bool LIO3DLib::ReadMapCloud(const std::string map_cloud_file) {
+bool LIO3DInterface::ReadMapCloud(const std::string map_cloud_file) {
   PointCloud3f cloud;
   std::vector<float> intensities;
   if (!ReadPointCloud(map_cloud_file, cloud, intensities)) {
@@ -268,7 +269,7 @@ bool LIO3DLib::ReadMapCloud(const std::string map_cloud_file) {
   return true;
 }
 
-bool LIO3DLib::ReadMapCloudPCD(const std::string& map_cloud_dir) {
+bool LIO3DInterface::ReadMapCloudPCD(const std::string& map_cloud_dir) {
   if (!std::filesystem::exists(map_cloud_dir) || !std::filesystem::is_directory(map_cloud_dir)) {
     std::cerr << "[ERROR] Invalid directory: " << map_cloud_dir << std::endl;
     return false;

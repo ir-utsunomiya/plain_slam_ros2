@@ -18,15 +18,15 @@
  *
  * For commercial licensing inquiries, please contact:
  *   Naoki Akai
- *   Email: n.akai.goo[at]gmail.com   ([at] → @)
+ *   Email: n.akai.goo[at]gmail.com   ([at] -> @)
  *   Subject: [plain_slam_ros2] Commercial License Inquiry
  */
 
-#include <plain_slam/slam_3d_lib.hpp>
+#include <plain_slam/slam_3d_interface.hpp>
 
 namespace pslam {
 
-SLAM3DLib::SLAM3DLib() {
+SLAM3DInterface::SLAM3DInterface() {
   slam_data_dir_ = "/tmp/pslam_data/";
 
   accumulation_cycle_ = 5;
@@ -49,11 +49,11 @@ SLAM3DLib::SLAM3DLib() {
   is_pose_graph_updated_ = false;
 }
 
-SLAM3DLib::~SLAM3DLib() {
+SLAM3DInterface::~SLAM3DInterface() {
   
 }
 
-void SLAM3DLib::ReadSLAMParams() {
+void SLAM3DInterface::ReadSLAMParams() {
   const std::string yaml_file = param_files_dir_ + "/slam_3d_params.yaml";
   const YAML::Node config = YAML::LoadFile(yaml_file);
 
@@ -76,7 +76,7 @@ void SLAM3DLib::ReadSLAMParams() {
   g_optimizer_.SetHuberDelta(config["pose_graph"]["huber_delta"].as<float>());
 }
 
-void SLAM3DLib::SetData(
+void SLAM3DInterface::SetData(
   const Sophus::SE3f& odom_pose,
   const PointCloud3f& scan_cloud,
   const std::vector<float>& scan_intensities) {
@@ -210,7 +210,7 @@ void SLAM3DLib::SetData(
   BuildFilteredMapCloud();
 }
 
-void SLAM3DLib::MakeSLAMDataDir() {
+void SLAM3DInterface::MakeSLAMDataDir() {
   try {
     if (!std::filesystem::exists(slam_data_dir_)) {
       std::filesystem::create_directories(slam_data_dir_);
@@ -221,7 +221,7 @@ void SLAM3DLib::MakeSLAMDataDir() {
   }
 }
 
-void SLAM3DLib::ClearSLAMDataDir() {
+void SLAM3DInterface::ClearSLAMDataDir() {
   try {
     for (const auto& entry : std::filesystem::directory_iterator(slam_data_dir_)) {
       if (std::filesystem::is_regular_file(entry.path())) {
@@ -234,7 +234,7 @@ void SLAM3DLib::ClearSLAMDataDir() {
   }
 }
 
-void SLAM3DLib::BuildMapCloud() {
+void SLAM3DInterface::BuildMapCloud() {
   map_cloud_.clear();
   map_cloud_.reserve(5000000);
   map_intensities_.reserve(5000000);
@@ -252,7 +252,7 @@ void SLAM3DLib::BuildMapCloud() {
   }
 }
 
-void SLAM3DLib::WriteMapCloudPCD() {
+void SLAM3DInterface::WriteMapCloudPCD() {
   if (map_cloud_.size() == 0) {
     BuildMapCloud();
   }
@@ -297,7 +297,7 @@ void SLAM3DLib::WriteMapCloudPCD() {
   }
 }
 
-void SLAM3DLib::GetCloudFileNames(
+void SLAM3DInterface::GetCloudFileNames(
   size_t idx,
   std::string& raw_cloud_file,
   std::string& filtered_cloud_file) {
@@ -306,7 +306,7 @@ void SLAM3DLib::GetCloudFileNames(
   filtered_cloud_file = slam_data_dir_ + "filtered_cloud" + id + ".bin";
 }
 
-void SLAM3DLib::BuildFilteredMapCloud() {
+void SLAM3DInterface::BuildFilteredMapCloud() {
   const size_t num_max_points = 5000000;
   filtered_map_cloud_.clear();
   filtered_map_cloud_.reserve(num_max_points);
@@ -326,7 +326,7 @@ void SLAM3DLib::BuildFilteredMapCloud() {
   }
 }
 
-void SLAM3DLib::BuildGraphPoseKDTree() {
+void SLAM3DInterface::BuildGraphPoseKDTree() {
   graph_pose_points_.resize(pose_graph_.size());
   for (size_t i = 0; i < pose_graph_.size(); ++i) {
     graph_pose_points_[i] = pose_graph_[i].translation();
@@ -336,7 +336,7 @@ void SLAM3DLib::BuildGraphPoseKDTree() {
   graph_pose_kdtree_->buildIndex();
 }
 
-void SLAM3DLib::GetTargetCandidateIndices(
+void SLAM3DInterface::GetTargetCandidateIndices(
   const Sophus::SE3f& source_pose,
   std::vector<size_t>& target_indices) {
   if (graph_pose_points_.size() <= max_num_loop_candidates_) {
@@ -355,7 +355,7 @@ void SLAM3DLib::GetTargetCandidateIndices(
   }
 }
 
-void SLAM3DLib::TransformCloud(
+void SLAM3DInterface::TransformCloud(
   const Sophus::SE3f& T,
   PointCloud3f& cloud) {
   for (size_t i = 0; i < cloud.size(); ++i) {
@@ -363,14 +363,14 @@ void SLAM3DLib::TransformCloud(
   }
 }
 
-void SLAM3DLib::GetGraphNodes(PointCloud3f& nodes) {
+void SLAM3DInterface::GetGraphNodes(PointCloud3f& nodes) {
   nodes.resize(pose_graph_.size());
   for (size_t i = 0; i < pose_graph_.size(); ++i) {
     nodes[i] = pose_graph_[i].translation();
   }
 }
 
-void SLAM3DLib::GetOdomEdgePoints(
+void SLAM3DInterface::GetOdomEdgePoints(
   PointCloud3f& start_points,
   PointCloud3f& end_points) {
   start_points.resize(odom_edges_.size());
@@ -385,7 +385,7 @@ void SLAM3DLib::GetOdomEdgePoints(
   }
 }
 
-void SLAM3DLib::GetLoopEdgePoints(
+void SLAM3DInterface::GetLoopEdgePoints(
   PointCloud3f& start_points,
   PointCloud3f& end_points) {
   start_points.resize(loop_edges_.size());

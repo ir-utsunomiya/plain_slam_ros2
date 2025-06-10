@@ -18,7 +18,7 @@
  *
  * For commercial licensing inquiries, please contact:
  *   Naoki Akai
- *   Email: n.akai.goo[at]gmail.com   ([at] → @)
+ *   Email: n.akai.goo[at]gmail.com   ([at] -> @)
  *   Subject: [plain_slam_ros2] Commercial License Inquiry
  */
 
@@ -32,7 +32,7 @@
 
 #include <chrono>
 
-#include <plain_slam/lio_3d_lib.hpp>
+#include <plain_slam/lio_3d_interface.hpp>
 
 #include <plain_slam_ros2/ros_utils.hpp>
 
@@ -230,7 +230,7 @@ class LIO3DNode : public rclcpp::Node {
 
   std::string lidar_type_;
 
-  pslam::LIO3DLib lio_;
+  pslam::LIO3DInterface lio_;
 
   std::string odom_frame_;
   std::string imu_frame_;

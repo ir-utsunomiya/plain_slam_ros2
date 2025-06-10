@@ -18,7 +18,7 @@
  *
  * For commercial licensing inquiries, please contact:
  *   Naoki Akai
- *   Email: n.akai.goo[at]gmail.com   ([at] → @)
+ *   Email: n.akai.goo[at]gmail.com   ([at] -> @)
  *   Subject: [plain_slam_ros2] Commercial License Inquiry
  */
 

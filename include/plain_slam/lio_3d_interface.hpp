@@ -18,7 +18,7 @@
  *
  * For commercial licensing inquiries, please contact:
  *   Naoki Akai
- *   Email: n.akai.goo[at]gmail.com   ([at] → @)
+ *   Email: n.akai.goo[at]gmail.com   ([at] -> @)
  *   Subject: [plain_slam_ros2] Commercial License Inquiry
  */
 
@@ -45,11 +45,11 @@
 
 namespace pslam {
 
-class LIO3DLib {
+class LIO3DInterface {
  public:
-  LIO3DLib();
+  LIO3DInterface();
 
-  ~LIO3DLib();
+  ~LIO3DInterface();
 
   void ReadLIOParams();
 
@@ -118,8 +118,7 @@ class LIO3DLib {
 
   void GetIMUOdometry(
     State& state,
-    StateCov& state_cov)
-  {
+    StateCov& state_cov) {
     {
       std::lock_guard<std::mutex> lock(imu_mutex_);
       state = imu_odom_state_;

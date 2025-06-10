@@ -31,7 +31,7 @@ add_executable(lio_3d_node
   src/ros_utils.cpp
   src/io.cpp
   src/lie_algebra.cpp
-  src/lio_3d_lib.cpp
+  src/lio_3d_interface.cpp
   src/imu_preintegrator.cpp
   src/gravity_direc_estimator.cpp
   src/keyframe_detector.cpp
@@ -74,7 +74,7 @@ add_executable(slam_3d_node
   src/slam_3d_node.cpp
   src/ros_utils.cpp
   src/lie_algebra.cpp
-  src/slam_3d_lib.cpp
+  src/slam_3d_interface.cpp
   src/io.cpp
   src/keyframe_detector.cpp
   src/voxel_grid_filter.cpp

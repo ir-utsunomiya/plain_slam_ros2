@@ -18,7 +18,7 @@
  *
  * For commercial licensing inquiries, please contact:
  *   Naoki Akai
- *   Email: n.akai.goo[at]gmail.com   ([at] → @)
+ *   Email: n.akai.goo[at]gmail.com   ([at] -> @)
  *   Subject: [plain_slam_ros2] Commercial License Inquiry
  */
 
@@ -36,7 +36,7 @@
 
 #include <chrono>
 
-#include <plain_slam/slam_3d_lib.hpp>
+#include <plain_slam/slam_3d_interface.hpp>
 
 #include <plain_slam_ros2/ros_utils.hpp>
 
@@ -188,7 +188,7 @@ class SLAM3DNode : public rclcpp::Node {
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr odom_edges_pub_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr loop_edges_pub_;
 
-  pslam::SLAM3DLib slam_;
+  pslam::SLAM3DInterface slam_;
 
   std::string map_frame_;
   std::string odom_frame_;

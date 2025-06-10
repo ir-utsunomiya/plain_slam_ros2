@@ -18,7 +18,7 @@
  *
  * For commercial licensing inquiries, please contact:
  *   Naoki Akai
- *   Email: n.akai.goo[at]gmail.com   ([at] → @)
+ *   Email: n.akai.goo[at]gmail.com   ([at] -> @)
  *   Subject: [plain_slam_ros2] Commercial License Inquiry
  */
 
@@ -44,11 +44,11 @@
 
 namespace pslam {
 
-class SLAM3DLib {
+class SLAM3DInterface {
  public:
-  SLAM3DLib();
+  SLAM3DInterface();
 
-  ~SLAM3DLib();
+  ~SLAM3DInterface();
 
   void SetData(
     const Sophus::SE3f& odom_pose,
