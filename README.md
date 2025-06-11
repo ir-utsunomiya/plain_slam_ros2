@@ -17,11 +17,11 @@ The core SLAM logic is independent of ROS 2 and relies only on **Sophus** (which
 
 The white points represent the local map used in LIO. When operating in localization mode, this can correspond to the global map.
 
-<video src="movies/lio_example.mp4" autoplay loop muted playsinline></video>
+![lie_example](gifs/lio_example.gif)
 
 **SLAM example**
 
-<video src="movies/slam_example.mp4" autoplay loop muted playsinline></video>
+![slam_example](gifs/slam_example.gif)
 
 
 
