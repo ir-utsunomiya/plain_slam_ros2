@@ -122,7 +122,7 @@ void GICP::Align() {
 
       const Point3f query = T_ * source_means_[i];
       const float query_pt[3] = {query.x(), query.y(), query.z()};
-      target_kdtree_->findNeighbors(result_set, query_pt, nanoflann::SearchParams());
+      target_kdtree_->findNeighbors(result_set, query_pt, nanoflann::SearchParameters());
 
       if (dists[0] > max_correspondence_dist2_) {
         continue;
@@ -193,7 +193,7 @@ void GICP::ComputeGICPPoint(
   const float query_pt[3] = {query.x(), query.y(), query.z()};
 
   result_set.init(indices.data(), dists.data());
-  kdtree.findNeighbors(result_set, query_pt, nanoflann::SearchParams());
+  kdtree.findNeighbors(result_set, query_pt, nanoflann::SearchParameters());
 
   mean = Eigen::Vector3f::Zero();
   for (size_t i = 0; i < num_cov_points_; ++i) {

@@ -38,8 +38,7 @@ add_executable(lio_3d_node
   src/voxel_grid_filter.cpp
   src/normal_map.cpp
   src/hierarchical_geometric_observer.cpp
-  src/joint_optimizer.cpp
-  src/scan_intensity_matcher.cpp)
+  src/joint_optimizer.cpp)
 
 target_include_directories(lio_3d_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

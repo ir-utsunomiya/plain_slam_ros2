@@ -34,8 +34,8 @@ LIO3DInterface::LIO3DInterface() {
 
   gravity_estimation_enabled_ = true;
 
-  scan_cloud_clip_range_ = 2.0f;
-  scan_cloud_filter_size_ = 0.1f;
+  scan_cloud_clip_range_ = 1.0f;
+  scan_cloud_filter_size_ = 0.05f;
 
   min_active_points_rate_ = 0.95f;
 
@@ -49,6 +49,11 @@ LIO3DInterface::LIO3DInterface() {
 
   imu_state_cov_ = StateCov::Identity();
   imu_odom_state_cov_ = imu_state_cov_;
+
+  const Eigen::Vector3f til = Eigen::Vector3f(-0.06125f, 0.013f, 0.01862f);
+  Eigen::Matrix3f Ril;
+  Ril << 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f;
+  imu_state_.Til = Sophus::SE3f(Ril, til).inverse();
 }
 
 LIO3DInterface::~LIO3DInterface() {

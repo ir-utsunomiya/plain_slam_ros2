@@ -27,11 +27,11 @@
 namespace pslam {
 
 NormalMap::NormalMap() {
-  const size_t max_keyframe_size = 20;
+  const size_t max_keyframe_size = 40;
   keyframe_poses_ = boost::circular_buffer<Sophus::SE3f>(max_keyframe_size);
   aligned_scan_clouds_ = boost::circular_buffer<PointCloud3f>(max_keyframe_size);
 
-  filter_size_ = 0.1f;
+  filter_size_ = 0.05f;
   normal_eigen_val_thresh_ = 0.1f;
   num_normal_points_ = 5;
 }
@@ -85,7 +85,7 @@ bool NormalMap::FindCorrespondence(
   std::vector<float> nn_dist(1);
   nanoflann::KNNResultSet<float> nn_result_set(1);
   nn_result_set.init(nn_idx.data(), nn_dist.data());
-  kdtree_->findNeighbors(nn_result_set, query.data(), nanoflann::SearchParams());
+  kdtree_->findNeighbors(nn_result_set, query.data(), nanoflann::SearchParameters());
   if (nn_dist[0] > dist2) {
     return false;
   }
@@ -104,7 +104,7 @@ bool NormalMap::FindCorrespondence(
     std::vector<float> dists(num_normal_points_);
     nanoflann::KNNResultSet<float> result_set(num_normal_points_);
     result_set.init(indices.data(), dists.data());
-    kdtree_->findNeighbors(result_set, query.data(), nanoflann::SearchParams());
+    kdtree_->findNeighbors(result_set, query.data(), nanoflann::SearchParameters());
 
     Eigen::Vector3f mean = Eigen::Vector3f::Zero();
     for (size_t i = 0; i < num_normal_points_; ++i) {

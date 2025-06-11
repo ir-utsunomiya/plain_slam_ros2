@@ -13,27 +13,35 @@ The core SLAM logic is independent of ROS 2 and relies only on **Sophus** (which
 
 
 
+**LIO (Localization) example**
+
+The white points represent the local map used in LIO. When operating in localization mode, this can correspond to the global map.
+
+![lio_example](gifs/lio_example.gif)
+
+**SLAM example**
+
+![slam_example](gifs/slam_example.gif)
+
+
+
 ## Install
 
 **Note:** This package has been tested on **Ubuntu 22.04** with **ROS 2 Humble**.
 
-**Eigen**
+**YAML and Eigen**
 
 ```sh
 sudo apt update
+sudo apt install libyaml-cpp-dev
 sudo apt install libeigen3-dev
 ```
 
 **nanoflann**
 
 ```sh
-sudo apt install libnanoflann-dev
-```
-
-**YAML**
-
-```sh
-sudo apt install libyaml-cpp-dev
+git clone https://github.com/jlblancoc/nanoflann.git
+sudo cp -r nanoflann/include/nanoflann /usr/local/include/
 ```
 
 **Sophus**
@@ -85,11 +93,6 @@ rviz2 -d config/slam_3d.rviz
 
 **plain_slam_ros2** does not depend on PCL, but it can load and save `.pcd` files. We assume your `.pcd` files are located in `/tmp/pslam_data/` (the default setting).
 To use the system as a localizer, set `use_as_localizer: true` in `config/lio_3d_config.yaml`, and set `map_cloud_dir` to the directory containing your `.pcd` files. Then, launch `lio_3d.launch.py`.
-
-```sh
-ros2 launch plain_slam_ros2 lio_3d.launch
-rviz2 -d config/lio_3d.rviz
-```
 
 
 

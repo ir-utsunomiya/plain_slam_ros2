@@ -29,9 +29,10 @@ namespace pslam {
 SLAM3DInterface::SLAM3DInterface() {
   slam_data_dir_ = "/tmp/pslam_data/";
 
+  accumulated_count_ = 0;
   accumulation_cycle_ = 5;
 
-  scan_cloud_filter_size_ = 0.25f;
+  scan_cloud_filter_size_ = 0.05f;
 
   kf_detector_.SetDistanceThreshold(3.0f);
   kf_detector_.SetAngleThreshold(30.0f * M_PI / 180.0f);
@@ -102,6 +103,7 @@ void SLAM3DInterface::SetData(
   }
 
   accumulated_count_++;
+  printf("accumulated_count_ = %lu\n", accumulated_count_);
   if (accumulated_count_ != accumulation_cycle_) {
     return;
   }
@@ -350,7 +352,7 @@ void SLAM3DInterface::GetTargetCandidateIndices(
     const Eigen::Vector3f query = source_pose.translation();
     const float query_pt[3] = {query.x(), query.y(), query.z()};
     result_set.init(indices.data(), dists.data());
-    graph_pose_kdtree_->findNeighbors(result_set, query_pt, nanoflann::SearchParams());
+    graph_pose_kdtree_->findNeighbors(result_set, query_pt, nanoflann::SearchParameters());
     target_indices = indices;
   }
 }

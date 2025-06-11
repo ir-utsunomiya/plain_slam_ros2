@@ -1,3 +1,6 @@
+tmp
+tmp/*
+
 src/scan_intensity_matcher.cpp
 include/plain_slam/scan_intensity_matcher.hpp
 
