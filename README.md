@@ -17,11 +17,11 @@ The core SLAM logic is independent of ROS 2 and relies only on **Sophus** (which
 
 The white points represent the local map used in LIO. When operating in localization mode, this can correspond to the global map.
 
-![lio_example](gifs/lio_example.gif)
+<video src="movies/lio_example.mp4" autoplay loop muted playsinline></video>
 
 **SLAM example**
 
-![slam_example](gifs/slam_example.gif)
+<video src="movies/slam_example.mp4" autoplay loop muted playsinline></video>
 
 
 
@@ -41,7 +41,7 @@ sudo apt install libeigen3-dev
 
 ```sh
 git clone https://github.com/jlblancoc/nanoflann.git
-sudo cp -r nanoflann/include/nanoflann /usr/local/include/
+sudo cp -r nanoflann/include/nanoflann.hpp /usr/local/include/
 ```
 
 **Sophus**
