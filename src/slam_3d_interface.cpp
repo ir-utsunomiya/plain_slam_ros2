@@ -32,7 +32,7 @@ SLAM3DInterface::SLAM3DInterface() {
   accumulated_count_ = 0;
   accumulation_cycle_ = 5;
 
-  scan_cloud_filter_size_ = 0.05f;
+  scan_cloud_filter_size_ = 0.1f;
 
   kf_detector_.SetDistanceThreshold(3.0f);
   kf_detector_.SetAngleThreshold(30.0f * M_PI / 180.0f);
@@ -81,21 +81,25 @@ void SLAM3DInterface::SetData(
   const Sophus::SE3f& odom_pose,
   const PointCloud3f& scan_cloud,
   const std::vector<float>& scan_intensities) {
+  // Initialize the odometry pose
   if (!is_odom_pose_initialized_) {
     slam_pose_ = odom_pose;
     prev_odom_pose_ = odom_pose;
     is_odom_pose_initialized_ = true;
   }
 
+  // Update the SLAM pose using the relative motion from odometry
   const Sophus::SE3f relative_odom_pose = prev_odom_pose_.inverse() * odom_pose;
   slam_pose_ = slam_pose_ * relative_odom_pose;
   prev_odom_pose_ = odom_pose;
 
+  // Accumulate scan clouds to increase point cloud density
   if (accumulated_count_ == 0) {
     accumulated_scan_cloud_.clear();
     accumulated_scan_intensities_.clear();
   }
 
+  // Transform the scan cloud to the odometry frame for accumulation
   for (size_t i = 0; i < scan_cloud.size(); ++i) {
     const Point3f p = odom_pose * scan_cloud[i];
     accumulated_scan_cloud_.push_back(p);
@@ -103,20 +107,22 @@ void SLAM3DInterface::SetData(
   }
 
   accumulated_count_++;
-  printf("accumulated_count_ = %lu\n", accumulated_count_);
   if (accumulated_count_ != accumulation_cycle_) {
     return;
   }
 
+  // Transform the accumulated scan clouds to the current IMU frame
   accumulated_count_ = 0;
   const Sophus::SE3f odom_pose_inv = odom_pose.inverse();
   for (size_t i = 0; i < accumulated_scan_cloud_.size(); ++i) {
     accumulated_scan_cloud_[i] = odom_pose_inv * accumulated_scan_cloud_[i];
   }
 
+  // downsamling
   const VoxelGridFilter vgf(scan_cloud_filter_size_);
   const PointCloud3f filtered_cloud = vgf.filter(accumulated_scan_cloud_);
 
+  // Add the scan cloud during the initial process
   if (pose_graph_.size() == 0) {
     kf_detector_.AddKeyframe(slam_pose_);
     pose_graph_.emplace_back(slam_pose_);
@@ -134,22 +140,25 @@ void SLAM3DInterface::SetData(
     return;
   }
 
+  // Return if the current pose is not a keyframe
   if (!kf_detector_.IsKeyframe(slam_pose_)) {
     return;
   }
 
-  is_pose_graph_updated_ = true;
-  kf_detector_.UpdateKeyframe(slam_pose_);
-
+  // Retrieve candidate nodes for loop closure detection
   std::vector<size_t> target_indices;
   GetTargetCandidateIndices(slam_pose_, target_indices);
-  pose_graph_.emplace_back(slam_pose_);
 
+  // Add the new pose and cloud
+  pose_graph_.emplace_back(slam_pose_);
+  kf_detector_.UpdateKeyframe(slam_pose_);
+  is_pose_graph_updated_ = true;
   std::string raw_cloud_file, filtered_cloud_file;
   GetCloudFileNames(pose_graph_.size() - 1, raw_cloud_file, filtered_cloud_file);
   WritePointCloud(raw_cloud_file, accumulated_scan_cloud_, accumulated_scan_intensities_);
   WritePointCloud(filtered_cloud_file, filtered_cloud);
 
+  // Add the odometry edge
   const size_t src_idx = pose_graph_.size() - 2;
   const size_t tgt_idx = pose_graph_.size() - 1;
   Edge odom_edge;
@@ -159,9 +168,12 @@ void SLAM3DInterface::SetData(
   odom_edges_.emplace_back(odom_edge);
   latest_keyframe_odom_pose_ = odom_pose;
 
+  // Find loop edges
   gicp_.SetSourceCloud(filtered_cloud, false);
   const size_t prev_loop_edges_size = loop_edges_.size();
 
+  // Perform GICP-based scan matching to find the loop edges.
+  // The conditions to classify the loop edges need to be tuned.
   for (size_t i = 0; i < target_indices.size(); ++i) {
     const Sophus::SE3f& target_pose = pose_graph_[target_indices[i]];
     const Eigen::Vector3f delta_trans = target_pose.translation() - slam_pose_.translation();
@@ -182,10 +194,10 @@ void SLAM3DInterface::SetData(
     const bool has_converged = gicp_.HasConverged();
     const float error_average = gicp_.GetErrorAverage();
     const float active_points_rate = gicp_.GetActivePointsRate();
-    std::cout << "For " << target_indices[i] << "th node" << std::endl;
-    std::cout << "has_converged: " << has_converged << std::endl;
-    std::cout << "error_average = " << error_average << std::endl;
-    std::cout << "active_points_rate = " << active_points_rate << std::endl;
+    // std::cout << "For " << target_indices[i] << "th node" << std::endl;
+    // std::cout << "has_converged: " << has_converged << std::endl;
+    // std::cout << "error_average = " << error_average << std::endl;
+    // std::cout << "active_points_rate = " << active_points_rate << std::endl;
 
     if (has_converged && error_average < error_average_th_ &&
       active_points_rate > active_points_rate_th_) {
@@ -201,9 +213,10 @@ void SLAM3DInterface::SetData(
   // Skip optimization if no new loop closures were detected
   const size_t new_loop_edges_size = loop_edges_.size();
   if (new_loop_edges_size == prev_loop_edges_size) {
-    std::cout << "No loop closures were detected" << std::endl;
+    std::cout << "No loop closures were detected." << std::endl;
   } else {
-    std::cout << new_loop_edges_size - prev_loop_edges_size << " edges were detected" << std::endl;
+    std::cout << new_loop_edges_size - prev_loop_edges_size
+      << " edges were detected." << std::endl;
     g_optimizer_.Optimize(odom_edges_, loop_edges_, pose_graph_);
     slam_pose_ = pose_graph_.back();
   }
@@ -281,9 +294,11 @@ void SLAM3DInterface::WriteMapCloudPCD() {
         cloud.push_back(map_cloud_[j]);
         intensities.push_back(map_intensities_[j]);
       }
-      const std::string fname = slam_data_dir_ + "/map_cloud" + std::to_string(i) + ".pcd";
+      const std::string fname = slam_data_dir_
+        + "/map_cloud" + std::to_string(i) + ".pcd";
       WriteBinaryPCD(fname, cloud, intensities);
-      std::cout << "Wrote " << i + 1 << "th map cloud to " << fname << std::endl;
+      std::cout << "Wrote " << i + 1
+        << "th map cloud to " << fname << std::endl;
     }
   }
 
@@ -334,7 +349,8 @@ void SLAM3DInterface::BuildGraphPoseKDTree() {
     graph_pose_points_[i] = pose_graph_[i].translation();
   }
   graph_pose_adaptor_ = std::make_unique<PointCloudAdaptor>(graph_pose_points_);
-  graph_pose_kdtree_ = std::make_unique<KDTree>(3, *graph_pose_adaptor_, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+  graph_pose_kdtree_ = std::make_unique<KDTree>(3,
+    *graph_pose_adaptor_, nanoflann::KDTreeSingleIndexAdaptorParams(10));
   graph_pose_kdtree_->buildIndex();
 }
 
@@ -352,7 +368,8 @@ void SLAM3DInterface::GetTargetCandidateIndices(
     const Eigen::Vector3f query = source_pose.translation();
     const float query_pt[3] = {query.x(), query.y(), query.z()};
     result_set.init(indices.data(), dists.data());
-    graph_pose_kdtree_->findNeighbors(result_set, query_pt, nanoflann::SearchParameters());
+    graph_pose_kdtree_->findNeighbors(result_set,
+      query_pt, nanoflann::SearchParameters());
     target_indices = indices;
   }
 }

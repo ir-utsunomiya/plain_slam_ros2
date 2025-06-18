@@ -61,8 +61,7 @@ void GravityDirecEstimator::EstimateGravityDirec(const IMUMeasure& measure) {
   const Eigen::Vector3f a = acc_ave.normalized();
 
   const Eigen::Vector3f axis = a.cross(g);
-  float dot = a.dot(g);
-  dot = std::clamp(dot, -1.0f, 1.0f);
+  const float dot = std::clamp(a.dot(g), -1.0f, 1.0f);
   const float angle = std::acos(dot);
 
   if (axis.norm() < 1e-6 || std::isinf(angle) || std::isnan(angle)) {
@@ -70,7 +69,6 @@ void GravityDirecEstimator::EstimateGravityDirec(const IMUMeasure& measure) {
   } else {
     const Eigen::Vector3f omega = axis.normalized() * angle;
     R_ = Sophus::SO3f::exp(omega);
-    // std::cout << "omega:" << std::endl << omega << std::endl;
   }
 
   // std::cout << "angle: " << angle << std::endl;

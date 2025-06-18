@@ -28,6 +28,7 @@
 
 #include <plain_slam/types.hpp>
 #include <plain_slam/voxel_grid_filter.hpp>
+#include <plain_slam/lie_algebra.hpp>
 
 namespace pslam {
 

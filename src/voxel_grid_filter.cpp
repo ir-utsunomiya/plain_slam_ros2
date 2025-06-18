@@ -38,6 +38,8 @@ VoxelGridFilter::~VoxelGridFilter() {
 PointCloud3f VoxelGridFilter::filter(const PointCloud3f& input) const {
   using Accum = std::pair<Point3f, int>;
   std::unordered_map<VoxelKey, Accum> voxels;
+
+  // Assume the output cloud size is approximately one-fourth of the input size.
   voxels.reserve(input.size() / 4);
 
   for (const auto& p : input) {

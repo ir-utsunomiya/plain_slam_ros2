@@ -1,12 +1,15 @@
 lio_3d_node:
   ros__parameters:
-    lidar_type: "livox_mid360"
+    lidar_type: "livox"
+    # lidar_type: "ouster"
     use_as_localizer: false
     map_cloud_dir: "/tmp/pslam_data/"
     param_files_dir: "" # LIO parameters must be located under plain_slam_ros2/config/
 
     pointcloud_topic: "/livox/lidar"
     imu_topic: "/livox/imu"
+    # pointcloud_topic: "/os1_cloud_node/points"
+    # imu_topic: "/os1_cloud_node/imu"
 
     imu_pose_topic: "/pslam/imu_pose"
     imu_odom_topic: "/pslam/imu_odom"
@@ -15,4 +18,4 @@ lio_3d_node:
     deskewed_scan_cloud_topic: "/pslam/deskewed_scan_cloud"
 
     odom_frame: "odom"
-    imu_frame: "livox/imu"
+    imu_frame: "imu"

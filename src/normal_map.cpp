@@ -27,13 +27,13 @@
 namespace pslam {
 
 NormalMap::NormalMap() {
-  const size_t max_keyframe_size = 40;
+  const size_t max_keyframe_size = 20;
   keyframe_poses_ = boost::circular_buffer<Sophus::SE3f>(max_keyframe_size);
   aligned_scan_clouds_ = boost::circular_buffer<PointCloud3f>(max_keyframe_size);
 
-  filter_size_ = 0.05f;
-  normal_eigen_val_thresh_ = 0.1f;
-  num_normal_points_ = 5;
+  filter_size_ = 0.1f;
+  normal_eigen_val_thresh_ = 0.01f;
+  num_normal_points_ = 10;
 }
 
 NormalMap::~NormalMap() {
@@ -67,7 +67,8 @@ void NormalMap::AddKeyframe(
   }
 
   adaptor_ = std::make_unique<PointCloudAdaptor>(filtered_map_cloud_);
-  kdtree_ = std::make_unique<KDTree>(3, *adaptor_, nanoflann::KDTreeSingleIndexAdaptorParams(10));
+  kdtree_ = std::make_unique<KDTree>(3, *adaptor_,
+    nanoflann::KDTreeSingleIndexAdaptorParams(10));
   kdtree_->buildIndex();
 }
 
@@ -85,7 +86,8 @@ bool NormalMap::FindCorrespondence(
   std::vector<float> nn_dist(1);
   nanoflann::KNNResultSet<float> nn_result_set(1);
   nn_result_set.init(nn_idx.data(), nn_dist.data());
-  kdtree_->findNeighbors(nn_result_set, query.data(), nanoflann::SearchParameters());
+  kdtree_->findNeighbors(nn_result_set,
+    query.data(), nanoflann::SearchParameters());
   if (nn_dist[0] > dist2) {
     return false;
   }

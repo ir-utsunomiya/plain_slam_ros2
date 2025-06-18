@@ -49,7 +49,6 @@ bool KeyframeDetector::IsKeyframe(const Sophus::SE3f& pose) {
   const float d_angle = dT.so3().log().norm();
 
   if (d_dist > dist_th_ || d_angle > angle_th_) {
-    // prev_pose_ = pose;
     return true;
   }
 

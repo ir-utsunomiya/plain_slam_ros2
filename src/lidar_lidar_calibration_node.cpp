@@ -48,14 +48,19 @@ int main() {
     return 1;
   }
 
-  const auto t1 = std::chrono::high_resolution_clock::now();
-
   pslam::GICP gicp;
   gicp.SetMaxIteration(50);
   gicp.SetMaxCorrespondenceDist(1.0f);
   gicp.SetHuberDelta(0.1f);
   gicp.SetSourceCloud(source_cloud, true);
   gicp.SetTargetCloud(target_cloud, true);
+
+  // Set the initial transformation if you have the initial guess.
+  // Sophus::SE3f T_init;
+  // gicp.SetTransformation(T_init);
+
+  const auto t1 = std::chrono::high_resolution_clock::now();
+
   gicp.Align();
 
   const auto t2 = std::chrono::high_resolution_clock::now();

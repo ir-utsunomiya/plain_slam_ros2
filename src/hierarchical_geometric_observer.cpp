@@ -52,7 +52,7 @@ bool HierarchicalGeometricObserver::Estimate(
   NormalMap& normal_map) {
   const State initial_state = pred_state;
 
-  size_t scan_step = scan_cloud.size() / num_max_matching_points;
+  int scan_step = scan_cloud.size() / num_max_matching_points;
   if (scan_step < 1) {
     scan_step = 1;
   }
@@ -77,7 +77,8 @@ bool HierarchicalGeometricObserver::Estimate(
       }
 
       const float e = (target - query).transpose() * normal;
-      const Eigen::Vector3f pn = normal.transpose() * Sophus::SO3f::hat(query).matrix();
+      const Eigen::Matrix<float, 1, 3> nT = normal.transpose();
+      const Eigen::Vector3f pn = nT * Sophus::SO3f::hat(query).matrix();
 
       Eigen::Matrix<float, 1, 6> J;
       J << -normal(0), -normal(1), -normal(2), pn(0), pn(1), pn(2);
@@ -99,12 +100,13 @@ bool HierarchicalGeometricObserver::Estimate(
       }
     }
 
-    active_points_rate_ = static_cast<float>(corresp_num) / static_cast<float>(used_points_num);
-    Eigen::LDLT<Eigen::Matrix<float, 6, 6>> solver(H);
-    Eigen::Matrix<float, 6, 1> d = solver.solve(-b);
+    active_points_rate_ = static_cast<float>(corresp_num)
+                        / static_cast<float>(used_points_num);
+    const Eigen::LDLT<Eigen::Matrix<float, 6, 6>> solver(H);
+    const Eigen::Matrix<float, 6, 1> d = solver.solve(-b);
     pose = Sophus::SE3f::exp(d) * pose;
     const float epsilon = d.norm();
-    std::cout << "iteration = " << iter_num + 1 << ", epsilon = " << epsilon << std::endl;
+    // std::cout << "iteration = " << iter_num + 1 << ", epsilon = " << epsilon << std::endl;
     if (epsilon < convergence_th) {
       has_converged = true;
       break;
@@ -115,13 +117,13 @@ bool HierarchicalGeometricObserver::Estimate(
     return false;
   }
 
-  // observer-based update
-  // estimated
+  // Observer-based update
+  // Estimated
   const float dt = preintegration_time;
   const Eigen::Vector3f p_mes = pose.translation();
   const Eigen::Quaternionf q_mes = Eigen::Quaternionf(pose.rotationMatrix());
 
-  // preintegration
+  // Preintegration
   const Eigen::Vector3f p_int = initial_state.T.translation();
   const Eigen::Quaternionf q_int = Eigen::Quaternionf(initial_state.T.rotationMatrix());
   const Eigen::Matrix3f rot_mat_int = q_int.toRotationMatrix();
@@ -129,28 +131,26 @@ bool HierarchicalGeometricObserver::Estimate(
   const Eigen::Vector3f ab_int = initial_state.ab;
   const Eigen::Vector3f gb_int = initial_state.gb;
 
-  // errors between estimated and preintegration
+  // Errors between the estimated and preintegration
   const Eigen::Vector3f pe = p_mes - p_int;
   const Eigen::Quaternionf qe = q_int.conjugate() * q_mes;
-  const float real_factor = 1.0f - abs(qe.w());
-  float sgn = 1.0f;
-  if (qe.w() < 0.0f) {
-    sgn = -1.0f;
-  }
-  const Eigen::Quaternionf q(real_factor, sgn * qe.x(), sgn * qe.y(), sgn * qe.z());
+  const float real = 1.0f - abs(qe.w());
+  const float sgn = (qe.w() < 0.0f) ? -1.0f : 1.0f;
+  const Eigen::Quaternionf q(real, sgn * qe.x(), sgn * qe.y(), sgn * qe.z());
 
-  // updates
+  // Updates
   Eigen::Quaternionf q_update = q_int * q;
   q_update.w() *= dt * gamma1_;
   q_update.x() *= dt * gamma1_;
   q_update.y() *= dt * gamma1_;
   q_update.z() *= dt * gamma1_;
-  const Eigen::Vector3f gb_update = dt * gamma2_ * qe.w() * Eigen::Vector3f(qe.x(), qe.y(), qe.z());
+  const Eigen::Vector3f gb_update = dt * gamma2_ * qe.w()
+                                  * Eigen::Vector3f(qe.x(), qe.y(), qe.z());
   const Eigen::Vector3f p_update = dt * gamma3_ * pe;
   const Eigen::Vector3f v_update = dt * gamma4_ * pe;
   const Eigen::Vector3f ab_update = dt * gamma5_ * rot_mat_int.transpose() * pe;
 
-  // new estimates
+  // New estimate
   Eigen::Quaternionf new_q(q_int.w() + q_update.w(), q_int.x() + q_update.x(),
     q_int.y() + q_update.y(), q_int.z() + q_update.z());
   new_q.normalize();

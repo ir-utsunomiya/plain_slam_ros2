@@ -23,3 +23,5 @@ To obtain a commercial license or request commercial use permission, please cont
   Naoki Akai  
   Email: n.akai.goo[at]gmail.com   [at] -> @  
   Subject: [plain_slam_ros2] Commercial License Inquiry
+
+For the purposes of this license, "non-commercial" means not primarily intended for or directed towards commercial advantage or monetary compensation.

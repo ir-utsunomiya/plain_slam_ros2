@@ -39,34 +39,34 @@ Eigen::Matrix<float, 6, 6> AdjointSE3(const Sophus::SE3f& T) {
 }
 
 Eigen::Matrix3f LeftJacobianSO3(const Eigen::Vector3f& phi) {
-  float theta = phi.norm();
-  Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
-  if (theta < 1e-5f) {
-    return I + 0.5f * Sophus::SO3f::hat(phi);
+  const float t = phi.norm();
+  const Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
+  const Eigen::Matrix3f S = Sophus::SO3f::hat(phi);
+
+  if (t < 1e-5f) {
+    return I + 0.5f * S;
   }
 
-  float theta2 = theta * theta;
-  float s = sin(theta);
-  float c = cos(theta);
+  const float t2 = t * t;
+  const float s = sin(t);
+  const float c = cos(t);
 
-  return I + (1.0f - c) / theta2 * Sophus::SO3f::hat(phi)
-       + (theta - s) / (theta2 * theta) * Sophus::SO3f::hat(phi) * Sophus::SO3f::hat(phi);
+  return I + (1.0f - c) / t2 * S + (t - s) / (t2 * t) * S * S;
 }
 
 Eigen::Matrix3f LeftJacobianInvSO3(const Eigen::Vector3f& phi) {
-  float theta = phi.norm();
-  Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
-  if (theta < 1e-5f) {
-    return I - 0.5f * Sophus::SO3f::hat(phi);
+  const float t = phi.norm();
+  const Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
+  const Eigen::Matrix3f S = Sophus::SO3f::hat(phi);
+
+  if (t < 1e-5f) {
+    return I - 0.5f * S;
   }
 
-  Eigen::Matrix3f phi_hat = Sophus::SO3f::hat(phi);
-  float theta2 = theta * theta;
-  float half_theta = 0.5f * theta;
-  float cot_half_theta = 1.0f / tan(half_theta);
+  const float t2 = t * t;
+  const float cot = 1.0f / tan(0.5f * t);
 
-  return I - 0.5f * phi_hat
-       + (1.0f - theta * cot_half_theta / 2.0f) / theta2 * phi_hat * phi_hat;
+  return I - 0.5f * S + (1.0f - t * cot / 2.0f) / t2 * S * S;
 }
 
 } // namespace pslam

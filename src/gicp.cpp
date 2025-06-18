@@ -88,8 +88,8 @@ void GICP::SetTargetCloud(
 }
 
 void GICP::Align() {
-  size_t step = source_means_.size() / num_max_source_points_;
-  if (step == 0) {
+  int step = source_means_.size() / num_max_source_points_;
+  if (step < 1) {
     step = 1;
   }
 
@@ -110,8 +110,8 @@ void GICP::Align() {
       total_num++;
 
       if (!source_point_computed_flags_[i]) {
-        ComputeGICPPoint(source_points_[i], *source_kdtree_, *source_adaptor_,
-          source_means_[i], source_covs_[i]);
+        ComputeGICPPoint(source_points_[i], *source_kdtree_,
+          *source_adaptor_, source_means_[i], source_covs_[i]);
         source_point_computed_flags_[i] = true;
       }
 
@@ -120,9 +120,10 @@ void GICP::Align() {
       nanoflann::KNNResultSet<float> result_set(1);
       result_set.init(indices.data(), dists.data());
 
-      const Point3f query = T_ * source_means_[i];
+      const Eigen::Vector3f query = T_ * source_means_[i];
       const float query_pt[3] = {query.x(), query.y(), query.z()};
-      target_kdtree_->findNeighbors(result_set, query_pt, nanoflann::SearchParameters());
+      target_kdtree_->findNeighbors(result_set,
+        query_pt, nanoflann::SearchParameters());
 
       if (dists[0] > max_correspondence_dist2_) {
         continue;
@@ -130,16 +131,14 @@ void GICP::Align() {
 
       const size_t tidx = indices[0];
       if (!target_point_computed_flags_[tidx]) {
-        ComputeGICPPoint(target_points_[tidx], *target_kdtree_, *target_adaptor_,
-          target_means_[tidx], target_covs_[tidx]);
+        ComputeGICPPoint(target_points_[tidx], *target_kdtree_,
+          *target_adaptor_, target_means_[tidx], target_covs_[tidx]);
         target_point_computed_flags_[tidx] = true;
       }
 
       const Eigen::Vector3f e = target_means_[tidx] - query;
       const float abs_e = e.norm();
-      // e_sum += abs_e;
       e_sum += std::sqrt(dists[0]);
-      num++;
 
       Eigen::Matrix<float, 3, 6> J;
       J.block<3, 3>(0, 0) = -Eigen::Matrix3f::Identity();
@@ -155,6 +154,8 @@ void GICP::Align() {
         H += JT * C * J;
         b += JT * C * e;
       }
+
+      num++;
     }
 
     if (num == 0) {
@@ -164,14 +165,15 @@ void GICP::Align() {
       return;
     }
 
-    Eigen::LDLT<Eigen::Matrix<float, 6, 6>> solver(H);
-    Eigen::Matrix<float, 6, 1> d = solver.solve(-b);
+    const Eigen::LDLT<Eigen::Matrix<float, 6, 6>> solver(H);
+    const Eigen::Matrix<float, 6, 1> d = solver.solve(-b);
     T_ = Sophus::SE3f::exp(d) * T_;
     const float epsilon = d.norm();
-    active_points_rate_ = static_cast<float>(num) / static_cast<float>(total_num);
+    active_points_rate_ = static_cast<float>(num)
+                        / static_cast<float>(total_num);
     error_average_ = e_sum / num;
-    std::cout << T_.matrix() << std::endl;
-    std::cout << "epsilon = " << epsilon << std::endl;
+    // std::cout << T_.matrix() << std::endl;
+    // std::cout << "epsilon = " << epsilon << std::endl;
     if (epsilon < epsilon_) {
       has_converged_ = true;
       break;

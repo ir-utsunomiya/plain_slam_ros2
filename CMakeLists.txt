@@ -39,6 +39,7 @@ add_executable(lio_3d_node
   src/normal_map.cpp
   src/hierarchical_geometric_observer.cpp
   src/joint_optimizer.cpp)
+  # src/lidar_imu_calibration.cpp)
 
 target_include_directories(lio_3d_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -137,28 +138,29 @@ install(TARGETS pc2_to_pcd_node DESTINATION lib/${PROJECT_NAME})
 
 
 
-# calibration_node
+# lidar_lidar_calibration_node
 
-add_executable(calibration_node
-  src/calibration_node.cpp
+add_executable(lidar_lidar_calibration_node
+  src/lidar_lidar_calibration_node.cpp
   src/io.cpp
   src/voxel_grid_filter.cpp
+  src/lie_algebra.cpp
   src/gicp.cpp)
 
-target_include_directories(calibration_node PUBLIC
+target_include_directories(lidar_lidar_calibration_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   ${EIGEN3_INCLUDE_DIRS})
 
-target_compile_features(calibration_node PUBLIC c_std_99 cxx_std_17)
+target_compile_features(lidar_lidar_calibration_node PUBLIC c_std_99 cxx_std_17)
 
 ament_target_dependencies(
-  calibration_node
+  lidar_lidar_calibration_node
   "rclcpp"
   "rclpy"
 )
 
-install(TARGETS calibration_node DESTINATION lib/${PROJECT_NAME})
+install(TARGETS lidar_lidar_calibration_node DESTINATION lib/${PROJECT_NAME})
 
 
 

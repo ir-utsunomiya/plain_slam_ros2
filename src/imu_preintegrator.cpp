@@ -27,19 +27,11 @@
 namespace pslam {
 
 IMUPreintegrator::IMUPreintegrator() {
-  Eigen::Matrix<float, 12, 12> Q = Eigen::Matrix<float, 12, 12>::Zero();
-
-  const float gyro_noise_sigma = 1e-3f;
-  const float acc_noise_sigma = 1e-2f;
-  const float gyro_bias_sigma = 1e-5f;
-  const float acc_bias_sigma = 1e-4f;
-
-  Q.block<3, 3>(0, 0) = pow(gyro_noise_sigma, 2) * Eigen::Matrix3f::Identity();
-  Q.block<3, 3>(3, 3) = pow(acc_noise_sigma, 2) * Eigen::Matrix3f::Identity();
-  Q.block<3, 3>(6, 6) = pow(gyro_bias_sigma, 2) * Eigen::Matrix3f::Identity();
-  Q.block<3, 3>(9, 9) = pow(acc_bias_sigma, 2) * Eigen::Matrix3f::Identity();
-
-  process_noise_cov_ = 1e10f * Q;
+  process_noise_cov_ = Eigen::Matrix<float, 12, 12>::Identity();
+  process_noise_cov_.block<3, 3>(0, 0) *= 1e4f;
+  process_noise_cov_.block<3, 3>(3, 3) *= 1e6f;
+  process_noise_cov_.block<3, 3>(6, 6) *= 1.0f;
+  process_noise_cov_.block<3, 3>(9, 9) *= 100.0f;
 }
 
 IMUPreintegrator::~IMUPreintegrator() {
@@ -96,7 +88,6 @@ void IMUPreintegrator::Preintegration(
   const Eigen::Vector3f gyro = gyro_sum / imu_measures.size();
   const Eigen::Vector3f phi = gyro * dt;
   const Eigen::Matrix3f dR = Sophus::SO3f::exp(phi).matrix();
-  // Eigen::Matrix3f A = LeftJacobianSO3(phi);
   const Eigen::Matrix3f AinvT = LeftJacobianInvSO3(phi).transpose();
   const Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
   const Eigen::Matrix3f R = preint_Ts_[0].rotationMatrix();
@@ -123,7 +114,8 @@ void IMUPreintegrator::Preintegration(
   Fw.block<3, 3>(9, 6) =  I * dt;
   Fw.block<3, 3>(12, 9) =  I * dt;
 
-  state_cov = Fx * state_cov * Fx.transpose() + Fw * process_noise_cov_ * Fw.transpose();
+  state_cov = Fx * state_cov * Fx.transpose()
+            + Fw * process_noise_cov_ * Fw.transpose();
 }
 
 void IMUPreintegrator::Preintegration(
@@ -177,7 +169,8 @@ void IMUPreintegrator::Preintegration(
   Fw.block<3, 3>(9, 6) =  I * dt;
   Fw.block<3, 3>(12, 9) =  I * dt;
 
-  state_cov = Fx * state_cov * Fx.transpose() + Fw * process_noise_cov_ * Fw.transpose();
+  state_cov = Fx * state_cov * Fx.transpose()
+            + Fw * process_noise_cov_ * Fw.transpose();
 }
 
 void IMUPreintegrator::DeskewScanCloud(

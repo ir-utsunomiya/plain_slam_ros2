@@ -65,6 +65,12 @@ class GraphOptimizer {
   size_t max_iter_num_;
   float epsilon_;
   float huber_delta_;
+
+  void AddEdgeFactors(
+    const std::vector<Sophus::SE3f>& pose_graph,
+    const std::vector<Edge>& edges,
+    std::vector<Eigen::Triplet<float>>& H_list,
+    Eigen::MatrixXf& B);
 };
 
 } // namespace pslam

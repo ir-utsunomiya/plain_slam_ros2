@@ -40,10 +40,13 @@ class LIO3DNode : public rclcpp::Node {
  public:
   LIO3DNode()
   : Node("lio_3d_node") {
-    this->declare_parameter<std::string>("lidar_type", "livox_mid360");    
+    // Get the LiDAR type to parse PointCloud2 messages
+    this->declare_parameter<std::string>("lidar_type", "livox");    
     this->get_parameter("lidar_type", lidar_type_);
-    if (lidar_type_ == "livox_mid360") {
-      RCLCPP_INFO(this->get_logger(), "LiDAR type: Livox Mid360");
+    if (lidar_type_ == "livox") {
+      RCLCPP_INFO(this->get_logger(), "LiDAR type: Livox");
+    } else if (lidar_type_ == "ouster") {
+      RCLCPP_INFO(this->get_logger(), "LiDAR type: Ouster");
     } else {
       std::cout << "LiDAR type: Unknown (" << lidar_type_ << ")" << std::endl;
       RCLCPP_WARN(this->get_logger(),
@@ -51,8 +54,7 @@ class LIO3DNode : public rclcpp::Node {
         "The point cloud will be parsed assuming the following fields:\n"
         "- x, y, z: float32\n"
         "- intensity: float32\n"
-        "- timestamp: float64 (in seconds)\n"
-        "Also, the extrinsic transformation between LiDAR and IMU is assumed to be identity.",
+        "- timestamp: float64 (in seconds)\n",
         lidar_type_.c_str());
     }
 
@@ -118,12 +120,15 @@ class LIO3DNode : public rclcpp::Node {
       deskewed_scan_cloud_topic, 10);
 
     this->declare_parameter<std::string>("odom_frame", "odom");
-    this->declare_parameter<std::string>("imu_frame", "livox/imu");
+    this->declare_parameter<std::string>("imu_frame", "imu");
     this->get_parameter("odom_frame", odom_frame_);
     this->get_parameter("imu_frame", imu_frame_);
 
     tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
+    // This node broadcasts a transformation from odom_frame_ to imu_frame_,
+    // even when operating in localization mode.
+    // Please choose appropriate frame names.
     if (use_as_localizer) {
       this->declare_parameter<std::string>("map_cloud_dir", "/tmp/pslam_data/");
       std::string map_cloud_dir;
@@ -135,7 +140,8 @@ class LIO3DNode : public rclcpp::Node {
       }
 
       const pslam::PointCloud3f lio_map_cloud = lio_.GetNormalMapCloud();
-      PublishPointCloud(lio_map_cloud_pub_, odom_frame_, rclcpp::Clock().now(), lio_map_cloud);
+      PublishPointCloud(lio_map_cloud_pub_,
+        odom_frame_, rclcpp::Clock().now(), lio_map_cloud);
       lio_.SetMapUpdated(false);
     }
 
@@ -146,24 +152,30 @@ class LIO3DNode : public rclcpp::Node {
 
  private:
   void PointcloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
+    // Parse the PointCloud2 message
     pslam::PointCloud3f scan_cloud;
     std::vector<float> scan_intensities;
     std::vector<double> scan_stamps;
-
-    if (lidar_type_ == "livox_mid360") {
+    if (lidar_type_ == "livox") {
       ParseLivoxCloud(msg, scan_cloud, scan_intensities, scan_stamps);
+    } else if (lidar_type_ == "ouster") {
+      ParseOusterCloud(msg, rclcpp::Time(msg->header.stamp).seconds(),
+        scan_cloud, scan_intensities, scan_stamps);
     } else {
       ParsePSLAMCloud(msg, scan_cloud, scan_intensities, scan_stamps);
     }
 
-    const auto t1 = std::chrono::high_resolution_clock::now();
+    // const auto t1 = std::chrono::high_resolution_clock::now();
 
+    // The main process of LIO
     lio_.SetScanCloud(scan_cloud, scan_intensities, scan_stamps);
 
-    const auto t2 = std::chrono::high_resolution_clock::now();
-    std::cout << "elapsed time [msec]: " 
-      << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << std::endl;
+    // const auto t2 = std::chrono::high_resolution_clock::now();
+    // std::cout << "elapsed time [msec]: " 
+    //   << std::chrono::duration_cast<std::chrono::milliseconds>
+    //        (t2 - t1).count() << std::endl;
 
+    // Publish ROS messages
     const Sophus::SE3f imu_pose = lio_.GetIMUPose();
     PublishePose(imu_pose_pub_, odom_frame_, msg->header.stamp, imu_pose);
 
@@ -192,6 +204,8 @@ class LIO3DNode : public rclcpp::Node {
     static double prev_stamp;
 
     const double stamp = rclcpp::Time(msg->header.stamp).seconds();
+
+    // Compute the delta time, as it is used for IMU preintegration.
     double dt;
     if (is_first) {
       prev_stamp = stamp;
@@ -210,8 +224,12 @@ class LIO3DNode : public rclcpp::Node {
     measure.stamp = stamp;
     measure.dt = dt;
 
+    // SetIMUMeasure only stores IMU data. The relevant IMU measurements
+    // corresponding to the LiDAR data are extracted in SetScanCloud.
+    // The acceleration scale is modified in SetIMUMeasure.
     lio_.SetIMUMeasure(measure);
 
+    // Publish odometry
     pslam::State imu_odom_state;
     pslam::StateCov imu_odom_state_cov;
     lio_.GetIMUOdometry(imu_odom_state, imu_odom_state_cov);

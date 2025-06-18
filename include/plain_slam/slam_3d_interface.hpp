@@ -180,16 +180,6 @@ class SLAM3DInterface {
   void TransformCloud(
     const Sophus::SE3f& T,
     PointCloud3f& cloud);
-
-  void DumpCloud(
-    const std::string& fname,
-    const PointCloud3f& cloud) {
-    FILE* fp = fopen(fname.c_str(), "w");
-    for (const auto& p: cloud) {
-      fprintf(fp, "%f %f %f\n", p.x(), p.y(), p.z());
-    }
-    fclose(fp);
-  }
 };
 
 

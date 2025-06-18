@@ -29,19 +29,19 @@ namespace pslam {
 LIO3DInterface::LIO3DInterface() {
   localization_mode_ = false;
 
-  imu_measures_ = boost::circular_buffer<IMUMeasure>(200);
+  imu_measures_ = boost::circular_buffer<IMUMeasure>(500);
   acc_scale_ = 1.0f;
 
   gravity_estimation_enabled_ = true;
 
   scan_cloud_clip_range_ = 1.0f;
-  scan_cloud_filter_size_ = 0.05f;
+  scan_cloud_filter_size_ = 0.1f;
 
-  min_active_points_rate_ = 0.95f;
+  min_active_points_rate_ = 0.9f;
 
   use_loose_coupling_ = false;
   num_max_iteration_ = 5;
-  num_max_matching_points_ = 100000;
+  num_max_matching_points_ = 50000;
   max_correspondence_dist_ = 1.0f;
   optimization_convergence_th_ = 0.1f;
 
@@ -50,10 +50,15 @@ LIO3DInterface::LIO3DInterface() {
   imu_state_cov_ = StateCov::Identity();
   imu_odom_state_cov_ = imu_state_cov_;
 
-  const Eigen::Vector3f til = Eigen::Vector3f(-0.06125f, 0.013f, 0.01862f);
-  Eigen::Matrix3f Ril;
-  Ril << 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f;
-  imu_state_.Til = Sophus::SE3f(Ril, til).inverse();
+  // const Eigen::Vector3f til = Eigen::Vector3f(-0.006253f, 0.011775f, 0.028535f);
+  // Eigen::Matrix3f Ril;
+  // Ril << -1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f;
+  // imu_state_.Til = Sophus::SE3f(Ril, til);
+
+  // const Eigen::Vector3f til = Eigen::Vector3f(-0.013, -0.01862, 0.06125);
+  // Eigen::Matrix3f Ril;
+  // Ril << 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f;
+  // imu_state_.Til = Sophus::SE3f(Ril, til);
 }
 
 LIO3DInterface::~LIO3DInterface() {
@@ -129,7 +134,7 @@ void LIO3DInterface::SetScanCloud(
     return;
   }
 
-  // Clip close scan points and transform to the IMU coordinate frame
+  // Clip close scan points and transform to the IMU frame
   const size_t raw_cloud_size = scan_cloud.size();
   scan_cloud_.clear();
   scan_intensities_.clear();
@@ -140,7 +145,7 @@ void LIO3DInterface::SetScanCloud(
   for (size_t i = 0; i < raw_cloud_size; ++i) {
     const Point3f& p = scan_cloud[i];
     if (p.norm() >= scan_cloud_clip_range_) {
-      scan_cloud_.push_back(imu_state_.Til * p); // Convert to IMU coordinates
+      scan_cloud_.push_back(imu_state_.Til * p); // Convert to the IMU frame
       scan_intensities_.push_back(scan_intensities[i]);
       scan_stamps_.push_back(scan_stamps[i]);
     }
@@ -158,6 +163,7 @@ void LIO3DInterface::SetScanCloud(
     return;
   }
 
+  // Do not use scan_stamps_ because it loses some scans when the scan is clipped.
   const double start_stamp = scan_stamps.front();
   const double end_stamp = scan_stamps.back();
   std::vector<IMUMeasure> relevant_imu_measures;
@@ -165,12 +171,22 @@ void LIO3DInterface::SetScanCloud(
   // Retrieve relevant IMU measurements
   {
     std::lock_guard<std::mutex> lock(imu_mutex_);
-    for (const auto& imu : imu_measures_) {
+    size_t erase_idx = 0;
+    for (size_t i = 0; i < imu_measures_.size(); ++i) {
+      const auto& imu = imu_measures_[i];
       const double stamp = imu.stamp;
-      if (start_stamp <= stamp && stamp <= end_stamp) {
+      if (stamp < start_stamp) {
+        erase_idx++;
+      } else if (stamp <= end_stamp) {
         relevant_imu_measures.push_back(imu);
-        // PrintIMUMeasure(imu);
+        erase_idx++;
+      } else {
+        break;
       }
+    }
+
+    if (erase_idx > 0) {
+      imu_measures_.erase_begin(erase_idx);
     }
   }
 
@@ -189,11 +205,13 @@ void LIO3DInterface::SetScanCloud(
   const PointCloud3f filtered_scan_cloud = vgf.filter(scan_cloud_);
   // PointCloud3f filtered_scan_cloud;
   // std::vector<float> filtered_scan_intensities;
-  // vgf.filter(scan_cloud_, scan_intensities_, filtered_scan_cloud, filtered_scan_intensities);
+  // vgf.filter(scan_cloud_, scan_intensities_,
+  //   filtered_scan_cloud, filtered_scan_intensities);
 
   float active_points_rate;
 
   if (use_loose_coupling_) {
+    // Reset the covariance to prevent overflow.
     imu_state_cov_ = StateCov::Identity();
     const float preint_time = preintegrator_.GetPreintegrationTime();
     if (!hg_observer_.Estimate(pred_state, scan_cloud_,
@@ -217,22 +235,31 @@ void LIO3DInterface::SetScanCloud(
   PrintState(imu_state_);
   // std::cout << imu_state_cov_.block<6, 6>(0, 0) << std::endl;
 
+  // Compensate for the odometry state
   {
     std::lock_guard<std::mutex> lock(imu_mutex_);
     imu_odom_state_ = imu_state_;
     imu_odom_state_cov_ = imu_state_cov_;
   }
 
+  // Transform the scan to the odometry frame
   aligned_scan_cloud_.resize(scan_cloud_.size());
   for (size_t i = 0; i < scan_cloud_.size(); ++i) {
     aligned_scan_cloud_[i] = imu_state_.T * scan_cloud_[i];
   }
 
+  // Perform LiDAR-IMU calibration
+  // Finalize the LIO process after calibration
+  // const float delta_time = preintegrator_.GetPreintegrationTime();
+  // const Sophus::SE3f imu_rel_T = preintegrator_.GetDeltaT();
+  // const Sophus::SE3f Tol = imu_state_.T * imu_state_.Til;
+  // li_calibrator_.SetData(delta_time, imu_rel_T, Tol);
+  // li_calibrator_.Calibrate(imu_state_.Til);
+
+  // Update the local map if the new state is classified as a keyframe
   if (localization_mode_) {
     return;
-  }
-
-  if (kf_detector_.IsKeyframe(imu_state_.T) &&
+  } else if (kf_detector_.IsKeyframe(imu_state_.T) &&
     active_points_rate < min_active_points_rate_) {
     kf_detector_.UpdateKeyframe(imu_state_.T);
     normal_map_.AddKeyframe(imu_state_.T, aligned_scan_cloud_);
@@ -275,7 +302,8 @@ bool LIO3DInterface::ReadMapCloud(const std::string map_cloud_file) {
 }
 
 bool LIO3DInterface::ReadMapCloudPCD(const std::string& map_cloud_dir) {
-  if (!std::filesystem::exists(map_cloud_dir) || !std::filesystem::is_directory(map_cloud_dir)) {
+  if (!std::filesystem::exists(map_cloud_dir)
+      || !std::filesystem::is_directory(map_cloud_dir)) {
     std::cerr << "[ERROR] Invalid directory: " << map_cloud_dir << std::endl;
     return false;
   }
@@ -293,8 +321,10 @@ bool LIO3DInterface::ReadMapCloudPCD(const std::string& map_cloud_dir) {
         if (ReadPCD(path, cloud, intensities)) {
           total_points += cloud.size();
           map_cloud.insert(map_cloud.end(), cloud.begin(), cloud.end());
-          // map_intensities.insert(map_intensities_.end(), intensities.begin(), intensities.end());
-          std::cout << "[INFO] Loaded " << path << " (" << cloud.size() << " points)" << std::endl;
+          // map_intensities.insert(map_intensities_.end(),
+          //   intensities.begin(), intensities.end());
+          std::cout << "[INFO] Loaded " << path << " ("
+            << cloud.size() << " points)" << std::endl;
         } else {
           std::cerr << "[WARNING] Failed to read: " << path << std::endl;
           return false;

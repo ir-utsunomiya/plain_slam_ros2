@@ -3,6 +3,9 @@ tmp/*
 
 src/scan_intensity_matcher.cpp
 include/plain_slam/scan_intensity_matcher.hpp
+src/lidar_imu_calibration.cpp
+include/plain_slam/lidar_imu_calibration.hpp
+
 
 data
 data/*

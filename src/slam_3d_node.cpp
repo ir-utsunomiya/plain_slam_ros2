@@ -56,6 +56,8 @@ class SLAM3DNode : public rclcpp::Node {
     this->get_parameter("param_files_dir", param_files_dir);
     slam_.SetParamFilesDir(param_files_dir);
 
+    // The SLAM node receives the IMU pose and the deskewed scan cloud,
+    // which are published by the LIO node.
     this->declare_parameter<std::string>("imu_pose_topic", "/pslam/imu_pose");
     this->declare_parameter<std::string>("deskewed_scan_cloud_topic", "/pslam/deskewed_scan_cloud");
     std::string imu_pose_topic;
@@ -72,6 +74,7 @@ class SLAM3DNode : public rclcpp::Node {
     sync_->registerCallback(
       std::bind(&SLAM3DNode::sync_callback, this, std::placeholders::_1, std::placeholders::_2));
 
+    // These published topics are used for visualization in RViz.
     this->declare_parameter<std::string>("filtered_map_cloud_topic", "/pslam/filtered_map_cloud");
     std::string filtered_map_cloud_topic;
     this->get_parameter("filtered_map_cloud_topic", filtered_map_cloud_topic);
@@ -96,9 +99,10 @@ class SLAM3DNode : public rclcpp::Node {
     loop_edges_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(
       loop_edges_topic, 1);
 
+    // The SLAM node broadcasts a transformation from map_frame_ to odom_frame_.
     this->declare_parameter<std::string>("map_frame", "map");
     this->declare_parameter<std::string>("odom_frame", "odom");
-    this->declare_parameter<std::string>("imu_frame", "livox/imu");
+    this->declare_parameter<std::string>("imu_frame", "imu");
     this->get_parameter("map_frame", map_frame_);
     this->get_parameter("odom_frame", odom_frame_);
     this->get_parameter("imu_frame", imu_frame_);
@@ -135,22 +139,22 @@ class SLAM3DNode : public rclcpp::Node {
       return;
     }
 
-    const auto t1 = std::chrono::high_resolution_clock::now();
+    // const auto t1 = std::chrono::high_resolution_clock::now();
 
+    // Main process of the SLAM system
     slam_.SetData(odom_pose, scan_cloud, scan_intensities);
-    if (!slam_.IsPoseGraphUpdated()) {
-      return;
-    }
 
-    const auto t2 = std::chrono::high_resolution_clock::now();
-    std::cout << "elapsed time [msec]: " 
-      << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << std::endl;
+    // const auto t2 = std::chrono::high_resolution_clock::now();
+    // std::cout << "elapsed time [msec]: " 
+    //   << std::chrono::duration_cast<std::chrono::milliseconds>
+    //        (t2 - t1).count() << std::endl;
 
     const Sophus::SE3f slam_pose = slam_.GetSLAMPose();
     const Sophus::SE3f T_map_odom = slam_pose * odom_pose.inverse();
     BroadcastTransform(tf_broadcaster_, map_frame_, odom_frame_,
       pose->header.stamp, T_map_odom);
 
+    // Publish the map and pose graph data
     if (slam_.IsPoseGraphUpdated()) {
       const pslam::PointCloud3f filtered_map_cloud = slam_.GetFilteredMapCloud();
       PublishPointCloud(filtered_map_cloud_pub_, map_frame_,

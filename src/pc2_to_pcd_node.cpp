@@ -61,9 +61,11 @@ class PC2ToPCDNode : public rclcpp::Node {
     }
 
     if (pslam::WriteBinaryPCD(output_pcd_file_, cloud_, intensities_) == true) {
-      RCLCPP_INFO(this->get_logger(), "Saved pointcloud to %s", output_pcd_file_.c_str());
+      RCLCPP_INFO(this->get_logger(), "Saved pointcloud to %s",
+        output_pcd_file_.c_str());
     } else {
-      RCLCPP_ERROR(this->get_logger(), "Failed to save pointcloud to %s", output_pcd_file_.c_str());
+      RCLCPP_ERROR(this->get_logger(), "Failed to save pointcloud to %s",
+        output_pcd_file_.c_str());
     }
   }
 
@@ -77,10 +79,13 @@ class PC2ToPCDNode : public rclcpp::Node {
     const pslam::VoxelGridFilter vgf(filter_size_);
     pslam::PointCloud3f filtered_cloud;
     std::vector<float> filtered_intensities;
-    vgf.filter(scan_cloud, scan_intensities, filtered_cloud, filtered_intensities);
+    vgf.filter(scan_cloud, scan_intensities,
+      filtered_cloud, filtered_intensities);
 
-    cloud_.insert(cloud_.end(), filtered_cloud.begin(), filtered_cloud.end());
-    intensities_.insert(intensities_.end(), filtered_intensities.begin(), filtered_intensities.end());
+    cloud_.insert(cloud_.end(),
+      filtered_cloud.begin(), filtered_cloud.end());
+    intensities_.insert(intensities_.end(),
+      filtered_intensities.begin(), filtered_intensities.end());
   }
 
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_sub_;

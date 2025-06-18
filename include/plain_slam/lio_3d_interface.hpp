@@ -42,6 +42,7 @@
 #include <plain_slam/normal_map.hpp>
 #include <plain_slam/hierarchical_geometric_observer.hpp>
 #include <plain_slam/joint_optimizer.hpp>
+// #include <plain_slam/lidar_imu_calibration.hpp>
 
 namespace pslam {
 
@@ -168,6 +169,8 @@ class LIO3DInterface {
 
   HierarchicalGeometricObserver hg_observer_;
   JointOptimizer joint_optimizer_;
+
+  // LiDARIMUCalibration li_calibrator_;
 
   void PrintIMUMeasure(const IMUMeasure& measure) {
     std::cout << "stamp = " << measure.stamp << std::endl;

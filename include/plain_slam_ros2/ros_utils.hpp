@@ -18,7 +18,7 @@
  *
  * For commercial licensing inquiries, please contact:
  *   Naoki Akai
- *   Email: n.akai.goo[at]gmail.com   ([at] → @)
+ *   Email: n.akai.goo[at]gmail.com   ([at] -> @)
  *   Subject: [plain_slam_ros2] Commercial License Inquiry
  */
 
@@ -41,6 +41,13 @@
 
 void ParseLivoxCloud(
   const sensor_msgs::msg::PointCloud2::SharedPtr msg,
+  pslam::PointCloud3f& scan_cloud,
+  std::vector<float>& scan_intensities,
+  std::vector<double>& scan_stamps);
+
+void ParseOusterCloud(
+  const sensor_msgs::msg::PointCloud2::SharedPtr msg,
+  double first_stamp,
   pslam::PointCloud3f& scan_cloud,
   std::vector<float>& scan_intensities,
   std::vector<double>& scan_stamps);
