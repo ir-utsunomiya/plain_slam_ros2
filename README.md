@@ -23,6 +23,12 @@ The white points represent the local map used in LIO. When operating in localiza
 
 ![slam_example](gifs/slam_example.gif)
 
+**The SLAM result on the Newer College Dataset** 🔗 [Newer College Dataset Website](https://ori-drs.github.io/newer-college-dataset/)
+
+**Note:** This result was obtained using **ROS 1**.
+
+![slam_result](figs/slam_result_newer_college_dataset.svg)
+
 
 
 ## Required Messages and Supported Sensors
@@ -128,7 +134,7 @@ If you want to construct a standard transformation tree for navigation, such as 
 
 ## Overview
 
-![Overview](figs/overview.svg)
+![overview](figs/overview.svg)
 
 The main source files of Plain SLAM are organized into an **interface layer** and **core modules**, as illustrated in the overview figure. The total C++ implementation of the Plain SLAM components consists of fewer than 1,800 lines of code, excluding blank lines and comments.
 
@@ -140,14 +146,14 @@ The result of the code analysis using `cloc` is as follows (executed via `code_s
       27 unique files.                              
        0 files ignored.
 
-github.com/AlDanial/cloc v 1.90  T=0.01 s (2181.8 files/s, 315148.6 lines/s)
+github.com/AlDanial/cloc v 1.90  T=0.01 s (2216.9 files/s, 320226.0 lines/s)
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-C++                             13            397            376           1773
+C++                             13            397            372           1777
 C/C++ Header                    14            281            324            749
 -------------------------------------------------------------------------------
-SUM:                            27            678            700           2522
+SUM:                            27            678            696           2526
 -------------------------------------------------------------------------------
 ```
 

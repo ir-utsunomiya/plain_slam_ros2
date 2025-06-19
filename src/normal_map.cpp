@@ -31,7 +31,7 @@ NormalMap::NormalMap() {
   keyframe_poses_ = boost::circular_buffer<Sophus::SE3f>(max_keyframe_size);
   aligned_scan_clouds_ = boost::circular_buffer<PointCloud3f>(max_keyframe_size);
 
-  filter_size_ = 0.1f;
+  filter_size_ = 0.25f;
   normal_eigen_val_thresh_ = 0.01f;
   num_normal_points_ = 10;
 }

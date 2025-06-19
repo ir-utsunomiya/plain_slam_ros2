@@ -27,8 +27,8 @@
 namespace pslam {
 
 KeyframeDetector::KeyframeDetector() {
-  dist_th_ = 0.5f;
-  angle_th_ = 10.0f * M_PI / 180.0f;
+  dist_th_ = 5.0f;
+  angle_th_ = 180.0f * M_PI / 180.0f;
 
   is_empty_ = true;
 }

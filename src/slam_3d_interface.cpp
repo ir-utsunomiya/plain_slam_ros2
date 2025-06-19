@@ -32,10 +32,10 @@ SLAM3DInterface::SLAM3DInterface() {
   accumulated_count_ = 0;
   accumulation_cycle_ = 5;
 
-  scan_cloud_filter_size_ = 0.1f;
+  scan_cloud_filter_size_ = 0.25f;
 
-  kf_detector_.SetDistanceThreshold(3.0f);
-  kf_detector_.SetAngleThreshold(30.0f * M_PI / 180.0f);
+  kf_detector_.SetDistanceThreshold(5.0f);
+  kf_detector_.SetAngleThreshold(180.0f * M_PI / 180.0f);
 
   slam_pose_ = Sophus::SE3f(Eigen::Matrix3f::Identity(), Eigen::Vector3f::Zero());
 
@@ -324,7 +324,7 @@ void SLAM3DInterface::GetCloudFileNames(
 }
 
 void SLAM3DInterface::BuildFilteredMapCloud() {
-  const size_t num_max_points = 5000000;
+  const size_t num_max_points = 20000000;
   filtered_map_cloud_.clear();
   filtered_map_cloud_.reserve(num_max_points);
   for (int i = static_cast<int>(pose_graph_.size()) - 1; i >= 0; --i) {

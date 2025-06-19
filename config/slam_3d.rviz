@@ -9,7 +9,6 @@ Panels:
         - /Grid1
         - /Map cloud1
         - /Map cloud1/Topic1
-        - /IMU pose1
       Splitter Ratio: 0.5
     Tree Height: 605
   - Class: rviz_common/Selection
@@ -37,7 +36,7 @@ Visualization Manager:
       Cell Size: 10
       Class: rviz_default_plugins/Grid
       Color: 255; 255; 255
-      Enabled: false
+      Enabled: true
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -50,7 +49,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/Axes
       Enabled: false
       Length: 1
@@ -73,7 +72,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 189
+      Max Intensity: 177
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: Deskewed scan cloud
@@ -141,9 +140,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 17.661151885986328
+      Max Intensity: 42.58042907714844
       Min Color: 0; 0; 0
-      Min Intensity: -2.092285633087158
+      Min Intensity: -2.3684604167938232
       Name: Map cloud
       Position Transformer: XYZ
       Selectable: true
@@ -265,7 +264,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 56.85017395019531
+      Distance: 45.491153717041016
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -280,10 +279,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 0.824796736240387
       Target Frame: imu
       Value: Orbit (rviz_default_plugins)
-      Yaw: 0.2085612267255783
+      Yaw: 4.268568992614746
     Saved: ~
 Window Geometry:
   Displays:
@@ -302,4 +301,4 @@ Window Geometry:
     collapsed: false
   Width: 1393
   X: 527
-  Y: 258
+  Y: 169
