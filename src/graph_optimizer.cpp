@@ -102,7 +102,7 @@ void GraphOptimizer::Optimize(
     Eigen::MatrixXf B = Eigen::MatrixXf::Zero(num_variables, 1);
 
     // Add a prior to the 0th node to fix it.
-    // T_error = T_i^{-1} T_prior
+    // T_error = T_i,0^{-1} T_i
     {
       const Eigen::Matrix<float, 6, 1> e = (origin_pose.inverse() * pose_graph[0]).log();
       const Eigen::Matrix<float, 6, 6> J = AdjointSE3(pose_graph[0].inverse());
