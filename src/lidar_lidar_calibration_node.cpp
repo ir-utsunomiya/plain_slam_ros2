@@ -30,9 +30,9 @@
 #include <plain_slam/gicp.hpp>
 
 int main() {
-  const std::string souce_pcd_file = "/home/akai/Dropbox/git/git_ros2_ws/src/plain_slam_ros2/data/left_mid360.pcd";
-  const std::string target_pcd_file = "/home/akai/Dropbox/git/git_ros2_ws/src/plain_slam_ros2/data/right_mid360.pcd";
-  const std::string output_pcd_file = "/home/akai/Dropbox/git/git_ros2_ws/src/plain_slam_ros2/data/aligned.pcd";
+  const std::string souce_pcd_file = "./src/plain_slam_ros2/data/left_mid360.pcd";
+  const std::string target_pcd_file = "./src/plain_slam_ros2/data/right_mid360.pcd";
+  const std::string output_pcd_file = "./src/plain_slam_ros2/data/aligned.pcd";
 
   pslam::PointCloud3f source_cloud;
   std::vector<float> source_intensities;
