@@ -103,7 +103,7 @@ source install/setup.bash
 Please edit `config/lio_3d_config.yaml` to match your environment. Then, launch `lio_3d.launch.py`. Don't forget to run `colcon build` after editing the config files.
 
 ```sh
-ros2 launch plain_slam_ros2 lio_3d.launch
+ros2 launch plain_slam_ros2 lio_3d.launch.py
 rviz2 -d config/lio_3d.rviz
 ```
 
@@ -112,7 +112,7 @@ rviz2 -d config/lio_3d.rviz
 Please edit `config/slam_3d_config.yaml` to match your environment as well. Then, launch `slam_3d.launch.py`.
 
 ```sh
-ros2 launch plain_slam_ros2 slam_3d.launch
+ros2 launch plain_slam_ros2 slam_3d.launch.py
 rviz2 -d config/slam_3d.rviz
 ```
 
