@@ -49,8 +49,9 @@ void GraphOptimizer::AddEdgeFactors(
     const Sophus::SE3f& Tj = pose_graph[tidx];
 
     const Eigen::Matrix<float, 6, 1> e = (Eij.inverse() * Ti.inverse() * Tj).log();
-    const Eigen::Matrix<float, 6, 6> Ji = -1.0f * AdjointSE3(Tj.inverse());
-    const Eigen::Matrix<float, 6, 6> Jj = -1.0f * Ji;
+    const Eigen::Matrix<float, 6, 6> Jlinv = LeftJacobianInvSE3(e);
+    const Eigen::Matrix<float, 6, 6> Ji = -1.0f * Jlinv * AdjointSE3(Tj.inverse());
+    const Eigen::Matrix<float, 6, 6> Jj = -1.0f * Jlinv * Ji;
     const Eigen::Matrix<float, 6, 6> JiT = Ji.transpose();
     const Eigen::Matrix<float, 6, 6> JjT = Jj.transpose();
 
@@ -102,10 +103,10 @@ void GraphOptimizer::Optimize(
     Eigen::MatrixXf B = Eigen::MatrixXf::Zero(num_variables, 1);
 
     // Add a prior to the 0th node to fix it.
-    // T_error = T_i,0^{-1} T_i
     {
       const Eigen::Matrix<float, 6, 1> e = (origin_pose.inverse() * pose_graph[0]).log();
-      const Eigen::Matrix<float, 6, 6> J = AdjointSE3(pose_graph[0].inverse());
+      const Eigen::Matrix<float, 6, 6> Jlinv = LeftJacobianInvSE3(e);
+      const Eigen::Matrix<float, 6, 6> J = Jlinv * AdjointSE3(pose_graph[0].inverse());
       const Eigen::Matrix<float, 6, 6> JT = J.transpose();
 
       const Eigen::Matrix<float, 6, 6> W = 1000.0f * Eigen::Matrix<float, 6, 6>::Identity();

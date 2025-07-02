@@ -20,7 +20,7 @@ keyframe:
 
 scan_cloud_preprocess:
   clip_range: 1.0
-  filter_size: 0.25
+  filter_size: 0.05
 
 normal_map:
   num_keyframes: 20
