@@ -152,6 +152,10 @@ class LIO3DNode : public rclcpp::Node {
 
  private:
   void PointcloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
+    for (size_t i = 0; i < msg->fields.size(); ++i) {
+      std::cout << i << "th name: " << msg->fields[i].name << std::endl;
+    }
+
     // Parse the PointCloud2 message
     pslam::PointCloud3f scan_cloud;
     std::vector<float> scan_intensities;

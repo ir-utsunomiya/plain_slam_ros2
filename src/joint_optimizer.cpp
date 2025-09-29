@@ -35,6 +35,7 @@ JointOptimizer::~JointOptimizer() {
 }
 
 bool JointOptimizer::Estimate(
+  const State& prev_state,
   const State& pred_state,
   const StateCov& pred_state_cov,
   const PointCloud3f& scan_cloud,
@@ -42,6 +43,8 @@ bool JointOptimizer::Estimate(
   size_t num_max_matching_points,
   float max_correspondence_dist,
   float convergence_th,
+  float preint_time,
+  const std::vector<IMUMeasure>& imu_measures,
   State& updated_state,
   StateCov& updated_cov,
   NormalMap& normal_map) {
@@ -58,22 +61,29 @@ bool JointOptimizer::Estimate(
   StateCov cov = pred_state_cov;
   bool has_converged = false;
 
-  using Matrix1x6f = Eigen::Matrix<float, 1, 6>;
+  using Matrix1x24f = Eigen::Matrix<float, 1, 24>;
+
+  const float dt = preint_time;
+  const float dt2 = dt * dt;
 
   for (size_t iter_num = 0; iter_num < max_iter_num; ++iter_num) {
     size_t used_points_num = 0;
     size_t corresp_num = 0;
 
     std::vector<float> rs;
-    std::vector<Matrix1x6f, Eigen::aligned_allocator<Matrix1x6f>> Jois;
-    std::vector<Matrix1x6f, Eigen::aligned_allocator<Matrix1x6f>> Jils;
+    std::vector<Matrix1x24f, Eigen::aligned_allocator<Matrix1x24f>> Js;
     rs.reserve(num_max_matching_points);
-    Jois.reserve(num_max_matching_points);
-    Jils.reserve(num_max_matching_points);
+    Js.reserve(num_max_matching_points);
 
     const Sophus::SE3f Tli = state.Til.inverse();
     const Eigen::Matrix3f Roi = state.T.rotationMatrix();
     const Eigen::Matrix3f Ril = state.Til.rotationMatrix();
+
+    Eigen::Vector3f phi = Eigen::Vector3f::Zero();
+    for (const IMUMeasure& m: imu_measures) {
+      phi += m.gyro - state.gb;
+    }
+    phi *= dt;
 
     for (size_t i = 0; i < scan_cloud.size(); i += scan_step) {
       used_points_num++;
@@ -84,24 +94,39 @@ bool JointOptimizer::Estimate(
         continue;
       }
 
-      const float r = (target - query).transpose() * normal;
+      const Eigen::Matrix<float, 1, 3> nT = normal.transpose();
+      const float r = nT * (target - query);
       rs.push_back(r);
 
-      const Eigen::Vector3f dr_dtoi = -normal;
+      Matrix1x24f J = Matrix1x24f::Zero();
+
+      const Eigen::Matrix<float, 1, 3> dr_dtoi = -nT;
+      J.block<1, 3>(0, 0) = dr_dtoi;
+
       const Eigen::Vector3f Rpi = state.T.rotationMatrix() * scan_cloud[i];
-      const Eigen::Matrix<float, 1, 3> nT = normal.transpose();
-      const Eigen::Vector3f dz_dRoi = nT * Sophus::SO3f::hat(Rpi).matrix();
-      Eigen::Matrix<float, 1, 6> Joi;
-      Joi << dr_dtoi(0), dr_dtoi(1), dr_dtoi(2), dz_dRoi(0), dz_dRoi(1), dz_dRoi(2);
-      Jois.emplace_back(Joi);
+      const Eigen::Matrix<float, 1, 3> dr_dRoi = nT * Sophus::SO3f::hat(Rpi).matrix();
+      J.block<1, 3>(0, 3) = dr_dRoi;
 
-      const Eigen::Vector3f dr_dtil = nT * Roi;
+      const Eigen::Matrix<float, 1, 3> dr_dv = -nT * dt;
+      J.block<1, 3>(0, 6) = dr_dv;
+
+      const Eigen::Matrix<float, 1, 3> dr_dbg = dr_dRoi * RightJacobianSO3(phi) * dt;
+      J.block<1, 3>(0, 9) = dr_dbg;
+
+      const Eigen::Matrix<float, 1, 3> dr_dba = 0.5f * nT * prev_state.T.rotationMatrix() * dt2;
+      J.block<1, 3>(0, 12) = dr_dba;
+
+      const Eigen::Matrix<float, 1, 3> dr_dg = -0.5f * nT * dt2;
+      J.block<1, 3>(0, 15) = dr_dg;
+
+      const Eigen::Matrix<float, 1, 3> dr_dtil = nT * Roi;
+      J.block<1, 3>(0, 18) = dr_dtil;
+
       const Eigen::Vector3f pl = Tli * scan_cloud[i];
-      const Eigen::Vector3f dz_dRil = nT * Roi * Sophus::SO3f::hat(Ril * pl).matrix();
-      Eigen::Matrix<float, 1, 6> Jil;
-      Jil << dr_dtil(0), dr_dtil(1), dr_dtil(2), dz_dRil(0), dz_dRil(1), dz_dRil(2);
-      Jils.emplace_back(Jil);
+      const Eigen::Matrix<float, 1, 3> dr_dRil = nT * Roi * Sophus::SO3f::hat(Ril * pl).matrix();
+      J.block<1, 3>(0, 21) = dr_dRil;
 
+      Js.emplace_back(J);
       corresp_num++;
       if (corresp_num >= num_max_matching_points) {
         break;
@@ -123,16 +148,12 @@ bool JointOptimizer::Estimate(
         const float abs_r = std::abs(rs[i]);
         const float w = (abs_r <= huber_delta_) ? 1.0f : (huber_delta_ / abs_r);
         r(i, 0) = w * rs[i];
-        J.block<1, 6>(i, 0) = w * Jois[i];
-        JT.block<6, 1>(0, i) = w * Jois[i].transpose();
-        J.block<1, 6>(i, 18) = w * Jils[i];
-        JT.block<6, 1>(18, i) = w * Jils[i].transpose();
+        J.block<1, 24>(i, 0) = w * Js[i];
+        JT.block<24, 1>(0, i) = w * Js[i].transpose();
       } else {
         r(i, 0) = rs[i];
-        J.block<1, 6>(i, 0) = Jois[i];
-        JT.block<6, 1>(0, i) = Jois[i].transpose();
-        J.block<1, 6>(i, 18) = Jils[i];
-        JT.block<6, 1>(18, i) = Jils[i].transpose();
+        J.block<1, 24>(i, 0) = Js[i];
+        JT.block<24, 1>(0, i) = Js[i].transpose();
       }
       // Rinv(i, i) = rinv;
     }
@@ -180,12 +201,13 @@ bool JointOptimizer::Estimate(
     const Sophus::SO3f Riln = Sophus::SO3f::exp(d.block<3, 1>(21, 0)) * state.Til.so3();
     state.Til = Sophus::SE3f(Riln, tiln);
 
-    cov = (I - K * J) * P;
+    // cov = (I - K * J) * P;
 
     const float epsilon = d.norm();
     // std::cout << "iteration = " << iter_num + 1 << ", epsilon = " << epsilon << std::endl;
     if (epsilon < convergence_th) {
       has_converged = true;
+      cov = (I - K * J) * P;
       break;
     }
   }

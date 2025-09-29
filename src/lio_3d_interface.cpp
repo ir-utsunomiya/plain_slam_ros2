@@ -193,13 +193,16 @@ void LIO3DInterface::SetScanCloud(
   if (relevant_imu_measures.empty()) {
     std::cerr << "[WARN] No matching IMU data for scan timestamp range ["
       << start_stamp << ", " << end_stamp << "]" << std::endl;
+    // printf("%.10lf --- %.10lf\n", imu_measures_.front().stamp, imu_measures_.back().stamp);
     return;
   }
 
+  const State prev_state = imu_state_;
   preintegrator_.Preintegration(relevant_imu_measures, imu_state_, imu_state_cov_);
   preintegrator_.DeskewScanCloud(imu_state_, relevant_imu_measures, scan_stamps_, scan_cloud_);
 
   const State pred_state = imu_state_;
+  const float preint_time = preintegrator_.GetPreintegrationTime();
 
   const VoxelGridFilter vgf(scan_cloud_filter_size_);
   const PointCloud3f filtered_scan_cloud = vgf.filter(scan_cloud_);
@@ -213,7 +216,6 @@ void LIO3DInterface::SetScanCloud(
   if (use_loose_coupling_) {
     // Reset the covariance to prevent overflow.
     imu_state_cov_ = StateCov::Identity();
-    const float preint_time = preintegrator_.GetPreintegrationTime();
     if (!hg_observer_.Estimate(pred_state, scan_cloud_,
       num_max_iteration_, num_max_matching_points_, max_correspondence_dist_,
       optimization_convergence_th_, preint_time, imu_state_, normal_map_)) {
@@ -223,16 +225,18 @@ void LIO3DInterface::SetScanCloud(
     active_points_rate = hg_observer_.GetActivePointsRate();
   } else {
     const StateCov pred_state_cov = imu_state_cov_;
-    if (!joint_optimizer_.Estimate(pred_state, pred_state_cov, filtered_scan_cloud,
-      num_max_iteration_, num_max_matching_points_, max_correspondence_dist_,
-      optimization_convergence_th_, imu_state_, imu_state_cov_, normal_map_)) {
+    if (!joint_optimizer_.Estimate(prev_state, pred_state, pred_state_cov,
+      filtered_scan_cloud, num_max_iteration_, num_max_matching_points_,
+      max_correspondence_dist_, optimization_convergence_th_, preint_time,
+      relevant_imu_measures, imu_state_, imu_state_cov_, normal_map_)) {
       std::cerr << "[WARN] Optimization has not converged" << std::endl;
       return;
     }
     active_points_rate = joint_optimizer_.GetActivePointsRate();
   }
 
-  PrintState(imu_state_);
+  // PrintState(imu_state_);
+  WriteLiDARPose(scan_stamps.front(), imu_state_);
   // std::cout << imu_state_cov_.block<6, 6>(0, 0) << std::endl;
 
   // Compensate for the odometry state

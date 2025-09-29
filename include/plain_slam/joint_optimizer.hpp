@@ -37,6 +37,7 @@ class JointOptimizer {
   ~JointOptimizer();
 
   bool Estimate(
+    const State& prev_state,
     const State& pred_state,
     const StateCov& pred_state_cov,
     const PointCloud3f& scan_cloud,
@@ -44,6 +45,8 @@ class JointOptimizer {
     size_t num_max_matching_points,
     float max_correspondence_dist,
     float convergence_th,
+    float preint_time,
+    const std::vector<IMUMeasure>& imu_measures,
     State& updated_state,
     StateCov& updated_cov,
     NormalMap& normal_map);

@@ -187,6 +187,22 @@ class LIO3DInterface {
     std::cout << "gx = " << state.gacc.x() << ", gy = " << state.gacc.y() << ", gz = " << state.gacc.z() << std::endl;
     std::cout << "Til" << std::endl << state.Til.matrix() << std::endl;    
   }
+
+  void WriteLiDARPose(double stamp, const State& state) {
+    static std::ofstream ofs("/tmp/pslam_lidar_pose.txt", std::ios::out | std::ios::trunc);
+    static std::once_flag once;
+    std::call_once(once, []{
+      ofs.setf(std::ios::fixed, std::ios::floatfield);
+      ofs << std::setprecision(9);
+    });
+  
+    const Sophus::SE3f Tol = state.T * state.Til;
+    const Eigen::Vector3f t = Tol.translation();
+    const Eigen::Quaternionf q(Tol.rotationMatrix());
+    ofs << stamp << ' '
+        << t.x()   << ' ' << t.y()   << ' ' << t.z()   << ' '
+        << q.w()   << ' ' << q.x()   << ' ' << q.y()   << ' ' << q.z() << '\n';
+  }
 };
 
 } // namespace pslam

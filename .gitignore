@@ -1,20 +1,23 @@
 tmp
 tmp/*
 
-preprint
-preprint/*
-
 src/scan_intensity_matcher.cpp
 include/plain_slam/scan_intensity_matcher.hpp
 src/lidar_imu_calibration.cpp
 include/plain_slam/lidar_imu_calibration.hpp
 
-
 data
 data/*
 
-doc
-doc/*
+doc/jp/Makefile
+doc/jp/*aux
+doc/jp/*bbl
+doc/jp/*blg
+doc/jp/*dvi
+doc/jp/*log
+doc/jp/root.pdf
+doc/jp/book_opt.pdf
+doc/figs/*svg
 
 # Prerequisites
 *.d

@@ -3,8 +3,8 @@ preprocess:
   scan_cloud_filter_size: 0.1
 
 keyframe:
-  distance_th: 3.0
-  angle_th: 90.0 # degree
+  distance_th: 5.0
+  angle_th: 1000.0 # degree
 
 loop_closure:
   num_loop_candidates: 10

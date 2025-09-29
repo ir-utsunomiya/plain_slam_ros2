@@ -82,6 +82,7 @@ void IMUPreintegrator::Preintegration(
   delta_T_ = preint_Ts_.front().inverse() * preint_Ts_.back();
   delta_v_ = preint_vs_.back() - preint_vs_.front();
 
+  /*
   const float dt = preint_time_;
   const float dt2 = dt * dt;
   const Eigen::Vector3f acc = acc_sum / imu_measures.size();
@@ -110,6 +111,40 @@ void IMUPreintegrator::Preintegration(
   Eigen::Matrix<float, 24, 12> Fw = Eigen::Matrix<float, 24, 12>::Zero();
   Fw.block<3, 3>(0, 3) = -0.5f * R * dt2;
   Fw.block<3, 3>(3, 0) = -R * dR * AinvT * dt;
+  Fw.block<3, 3>(6, 3) = -R * dt;
+  Fw.block<3, 3>(9, 6) =  I * dt;
+  Fw.block<3, 3>(12, 9) =  I * dt;
+  */
+
+  const float dt = preint_time_;
+  const float dt2 = dt * dt;
+  const Eigen::Vector3f acc = acc_sum / imu_measures.size();
+  const Eigen::Vector3f gyro = gyro_sum / imu_measures.size();
+  const Eigen::Vector3f phi = gyro * dt;
+  const Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
+  const Eigen::Matrix3f R = preint_Ts_.front().rotationMatrix();
+  const Eigen::Matrix3f RT = preint_Ts_.back().rotationMatrix().transpose();
+  const Eigen::Matrix3f RA = Sophus::SO3f::hat(R * acc);
+  const Eigen::Matrix3f dR = Sophus::SO3f::exp(phi).matrix();
+  const Eigen::Matrix3f Jlinv = LeftJacobianInvSO3(Sophus::SO3f(R * dR).log());
+  const Eigen::Matrix3f Jr = RightJacobianSO3(phi);
+
+  Eigen::Matrix<float, 24, 24> Fx = Eigen::Matrix<float, 24, 24>::Identity();
+  Fx.block<3, 3>(0, 3) = -0.5f * RA * dt2;
+  Fx.block<3, 3>(0, 6) = I * dt;
+  Fx.block<3, 3>(0, 12) = -0.5f * R * dt2;
+  Fx.block<3, 3>(0, 15) = 0.5f * I * dt2;
+
+  Fx.block<3, 3>(3, 3) = Jlinv * RT;
+  Fx.block<3, 3>(3, 9) = -Jlinv * Jr * dt;
+
+  Fx.block<3, 3>(6, 3) = -RA * dt;
+  Fx.block<3, 3>(6, 12) = -R * dt;
+  Fx.block<3, 3>(6, 15) = I * dt;
+
+  Eigen::Matrix<float, 24, 12> Fw = Eigen::Matrix<float, 24, 12>::Zero();
+  Fw.block<3, 3>(0, 3) = -0.5f * R * dt2;
+  Fw.block<3, 3>(3, 0) = -Jlinv * Jr * dt;
   Fw.block<3, 3>(6, 3) = -R * dt;
   Fw.block<3, 3>(9, 6) =  I * dt;
   Fw.block<3, 3>(12, 9) =  I * dt;

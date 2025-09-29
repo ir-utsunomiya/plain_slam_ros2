@@ -51,7 +51,7 @@ void GraphOptimizer::AddEdgeFactors(
     const Eigen::Matrix<float, 6, 1> e = (Eij.inverse() * Ti.inverse() * Tj).log();
     const Eigen::Matrix<float, 6, 6> Jlinv = LeftJacobianInvSE3(e);
     const Eigen::Matrix<float, 6, 6> Ji = -1.0f * Jlinv * AdjointSE3(Tj.inverse());
-    const Eigen::Matrix<float, 6, 6> Jj = -1.0f * Jlinv * Ji;
+    const Eigen::Matrix<float, 6, 6> Jj = -1.0f * Ji;
     const Eigen::Matrix<float, 6, 6> JiT = Ji.transpose();
     const Eigen::Matrix<float, 6, 6> JjT = Jj.transpose();
 

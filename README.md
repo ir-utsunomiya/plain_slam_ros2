@@ -1,6 +1,6 @@
 # plain_slam_ros2
 
-**plain_slam_ros2** is a ROS 2 package for LIO, LiDAR SLAM, and localization, built upon a minimal and modular SLAM system. The implementation is concise - its core C++ source code contains fewer than **1,800 lines**, excluding blank lines and comments.
+**plain_slam_ros2** is a ROS 2 package for LIO, LiDAR SLAM, and localization, built upon a minimal and modular SLAM system. The implementation is concise - its core C++ source code contains fewer than **2,000 lines**, excluding blank lines and comments.
 
 Despite its simplicity, **plain_slam_ros2** provides the following key features:
 
@@ -146,15 +146,17 @@ The result of the code analysis using `cloc` is as follows (executed via `code_s
       27 unique files.                              
        0 files ignored.
 
-github.com/AlDanial/cloc v 1.90  T=0.01 s (2287.9 files/s, 331836.2 lines/s)
+github.com/AlDanial/cloc v 1.90  T=0.01 s (2300.6 files/s, 342020.0 lines/s)
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-C++                             13            398            371           1793
-C/C++ Header                    14            281            324            749
+C++                             13            415            403           1821
+C/C++ Header                    14            284            324            767
 -------------------------------------------------------------------------------
-SUM:                            27            679            695           2542
+SUM:                            27            699            727           2588
 -------------------------------------------------------------------------------
+
+
 ```
 
 **Note:** The header files contain many inline accessor methods (e.g., setters and getters), but no core processing logic is implemented in them.

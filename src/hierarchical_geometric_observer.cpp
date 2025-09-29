@@ -33,7 +33,7 @@ HierarchicalGeometricObserver::HierarchicalGeometricObserver() {
   gamma4_ = 11.25f; // k_v
   gamma5_ = 2.25f; // k_ab
 
-  huber_delta_ = 0.1f;
+  huber_delta_ = 0.5f;
 }
 
 HierarchicalGeometricObserver::~HierarchicalGeometricObserver() {
@@ -76,8 +76,8 @@ bool HierarchicalGeometricObserver::Estimate(
         continue;
       }
 
-      const float e = (target - query).transpose() * normal;
       const Eigen::Matrix<float, 1, 3> nT = normal.transpose();
+      const float e = nT * (target - query);
       const Eigen::Vector3f pn = nT * Sophus::SO3f::hat(query).matrix();
 
       Eigen::Matrix<float, 1, 6> J;

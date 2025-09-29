@@ -32,6 +32,8 @@ namespace pslam {
 
 Eigen::Matrix<float, 6, 6> AdjointSE3(const Sophus::SE3f& T);
 
+Eigen::Matrix3f RightJacobianSO3(const Eigen::Vector3f& phi);
+
 Eigen::Matrix3f LeftJacobianInvSO3(const Eigen::Vector3f& phi);
 
 Eigen::Matrix<float, 6, 6> LeftJacobianInvSE3(const Eigen::Matrix<float, 6, 1>& xi);

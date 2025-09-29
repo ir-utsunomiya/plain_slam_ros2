@@ -38,6 +38,22 @@ Eigen::Matrix<float, 6, 6> AdjointSE3(const Sophus::SE3f& T) {
   return Adj;
 }
 
+Eigen::Matrix3f RightJacobianSO3(const Eigen::Vector3f& phi) {
+  Eigen::Matrix3f Jr = Eigen::Matrix3f::Identity();
+  const float t = phi.norm();
+
+  const Eigen::Matrix3f K = Sophus::SO3f::hat(phi);
+  if (t < 1e-5f) {
+    Jr -= 0.5f * K + (1.0f / 6.0f) * K * K;
+  } else {
+    const float t2 = t * t;
+    const float t3 = t2 * t;
+    Jr -= (1.0f - std::cos(t)) / t2 * K + (t - std::sin(t)) / t3 * K * K;
+  }
+
+  return Jr;
+}
+
 Eigen::Matrix3f LeftJacobianInvSO3(const Eigen::Vector3f& phi) {
   const float t = phi.norm();
   const Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
