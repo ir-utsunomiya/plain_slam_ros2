@@ -1,5 +1,9 @@
 # plain_slam_ros2
 
+📖 Documentation: [English](doc/en/book.pdf) | [日本語](doc/jp/book.pdf)
+
+
+
 **plain_slam_ros2** is a ROS 2 package for LIO, LiDAR SLAM, and localization, built upon a minimal and modular SLAM system. The implementation is concise - its core C++ source code contains fewer than **2,000 lines**, excluding blank lines and comments.
 
 Despite its simplicity, **plain_slam_ros2** provides the following key features:
