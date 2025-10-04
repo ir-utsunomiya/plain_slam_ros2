@@ -173,7 +173,7 @@ IMUプレインテグレーションによる更新を終えた後に，\ref{sub
 ここで${}^{L}{\bf p}$と${}^{I}{\bf p}$は同じ点をLiDAR，およびIMU座標で表したものであり${}^{I}{\bf p} = {}^{I}T_{L} {}^{L}{\bf p}$となります．
 また$\Delta \boldsymbol \phi = \left( \boldsymbol \omega_{t} - {\bf b}_{t-1}^{\omega} \right) \Delta t$であり，これは状態量である${\bf b}_{t-1}^{\omega}$が変更される度に再計算します．
 
-残差，およびヤコビアンを求めることができたら，Iterated Extended Kalman Filter（IEKF）を用いた更新を行いますが，これは次式に従い状態の反復更新を行うことで達成されます．
+残差，およびヤコビアンを求めることができたら，{\bf Iterated Extended Kalman Filter}（IEKF）を用いた更新を行いますが，これは次式に従い状態の反復更新を行うことで達成されます．
 %
 \begin{align}
   \begin{gathered}
@@ -404,7 +404,7 @@ $\partial R_{t} / \partial {\bf b}_{t-1}^{\omega}$を求めるために，以下
   \frac{ \theta - \sin \theta }{ \theta^{3} } \left( \boldsymbol \phi^{\wedge} \right)^{2}
 \end{align}
 %
-ただし$\| \boldsymbol \phi \|$です．
+ただし$\theta = \| \boldsymbol \phi \|_{2}$です．
 よって式(\ref{eq:dRt_dbt-1})を満たす$J$は$- J_{r} \left( \hat{ \boldsymbol \omega } \Delta t \right) \Delta t$となります．
 
 以上より，式(\ref{eq:dlogRt_dbomegat-1})は以下となります．

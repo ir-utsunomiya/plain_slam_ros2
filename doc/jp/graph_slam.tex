@@ -142,7 +142,7 @@ $\Delta_{i, j}$を用いると，ヤコビアンはそれぞれ連鎖則を用�
   \label{eq:deij_dDeltaij_J_deltaxi}
 \end{align}
 %
-ここで$\log \left( \exp \left( \delta \boldsymbol \xi^{\wedge} \right) \Delta_{i, j} \right)$は，BCH展開を用いて以下のように1次近似することができます．
+ここで$\log \left( \exp \left( \delta \boldsymbol \xi^{\wedge} \right) \Delta_{i, j} \right)^{\vee}$は，BCH展開を用いて以下のように1次近似することができます．
 %
 \begin{align}
   \left( \log \left( \exp \left( \delta \boldsymbol \xi^{\wedge} \right) \Delta_{i, j} \right) \right)^{\vee}
@@ -175,7 +175,7 @@ $\Delta_{i, j}$を用いると，ヤコビアンはそれぞれ連鎖則を用�
   \label{eq:left_jacobian_se3}
 \end{align}
 %
-ただし，$\boldsymbol \xi^{\wedge} = \left( \left( {\bf v}^{\top} ~ \boldsymbol \phi^{\top} \right)^{\top} \right)^{\wedge} \in \mathfrak{se}(3) $，$\boldsymbol \phi^{\wedge} \in \mathfrak{so}(3)$，$\theta = \| \boldsymbol \phi \|$です\footnote{式(\ref{eq:left_jacobian_se3})には${\rm SE}(3)$と${\rm SO(3)}$の左ヤコビアンがどちらも記載されていますが，引数が$\mathfrak{se}(3)$か$\mathfrak{so}(3)$でそれぞれを区別します．}．
+ただし，$\boldsymbol \xi^{\wedge} = \left( \left( {\bf v}^{\top} ~ \boldsymbol \phi^{\top} \right)^{\top} \right)^{\wedge} \in \mathfrak{se}(3) $，$\boldsymbol \phi^{\wedge} \in \mathfrak{so}(3)$，$\theta = \| \boldsymbol \phi \|_{2}$です\footnote{式(\ref{eq:left_jacobian_se3})には${\rm SE}(3)$と${\rm SO(3)}$の左ヤコビアンがどちらも記載されていますが，引数が$\mathfrak{se}(3)$か$\mathfrak{so}(3)$でそれぞれを区別します．}．
 式(\ref{eq:deij_dDeltaij_J_deltaxi})，(\ref{eq:bch_1_order_approx})から，$\partial {\bf r}_{i, j} / \partial \Delta_{i, j}$は以下になります．
 %
 \begin{align}
@@ -201,7 +201,7 @@ $\Delta_{i, j}$を用いると，ヤコビアンはそれぞれ連鎖則を用�
   \end{split}
 \end{align}
 %
-式(\ref{eq:dT_dT})と比較すると，$\partial \Delta_{ij} / \partial {}^{M}T_{I, i}$は以下になることがわかります．
+式(\ref{eq:dT_dT})と比較すると，$\partial \Delta_{i, j} / \partial {}^{M}T_{I, i}$は以下になることがわかります．
 %
 \begin{align}
   \frac{ \partial \Delta_{i, j} }{ \partial {}^{M}T_{I, i} } = - \operatorname{Ad}_{ {}^{M}T_{I, j}^{-1} }
@@ -253,7 +253,7 @@ $\delta \boldsymbol \xi \in \mathbb{R}^{6N}$は$N$個のブロックで構成さ
 
 グラフベースSLAMを実装するにあたり，ヘッセ行列のサイズは$6N \times 6N$となり，単純に逆行列を求めると計算コストが非常に大きくなってしまいます．
 しかし多くの場合，一般的なグラフベースSLAMでは，$H$の対角成分以外のほとんどの成分が0となります．
-このような行列は{\bf 疎行列}（Sparse Matrix）と呼ばれ，専用のソルバーを用いると高速に$H \delta \boldsymbol \xi = -{\bf b}$を満たす$\delta {\bf x}$を求めることができます．
+このような行列は{\bf 疎行列}（Sparse Matrix）と呼ばれ，専用のソルバーを用いると高速に$H \delta \boldsymbol \xi = -{\bf b}$を満たす$\delta \boldsymbol \xi$を求めることができます．
 そのため，実際には式(\ref{eq:graph_slam_hessian_gradient})に示すような大きなサイズのヤコビアンの計算は行わず，$J_{i}$，$J_{j}$を計算して，行列の各要素に加算していくような計算を行います．
 
 
@@ -302,6 +302,7 @@ GICPでは，これらを用いてコスト関数を以下のように定めま�
   \end{gathered}
 \end{align}
 %
+図\ref{fig:gicp_residual}に，GICPで用いられる残差の関係を示します．
 
 \begin{figure}[!t]
   \centering
@@ -369,7 +370,7 @@ GICPでは，これらを用いてコスト関数を以下のように定めま�
   \label{eq:gicp_hessian_and_gradient}
 \end{align}
 %
-なお$w_{i} = \rho^{\prime} \left( {\bf r}_{i} \Omega_{i} {\bf r}_{i} \right)$です．
+なお$w_{i} = \rho^{\prime} \left( {\bf r}_{i}^{\top} \Omega_{i} {\bf r}_{i} \right)$です．
 この$H$と${\bf b}$を用いて，$H \delta \boldsymbol \xi = -{\bf b}$を満たす$\delta \boldsymbol \xi$を求め，$T \leftarrow \exp \left( \delta \boldsymbol \xi^{\wedge} \right) T$で姿勢を更新します．
 
 式(\ref{eq:gicp_hessian_and_gradient})の導出について簡単に述べますが，これは\ref{subsec:gauss-newton_method}節でも述べたように，状態が微小変化した際の残差ベクトルの線形近似を用いたコスト関数について考えることで導出できます．

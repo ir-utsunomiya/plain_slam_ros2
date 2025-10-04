@@ -594,7 +594,7 @@ $\mathfrak{so}(3)$と$\mathfrak{se}(3)$は厳密にはそれぞれ$\mathbb{R}^{3
   \label{eq:so3_left_jacobian}
 \end{align}
 %
-ただし，$\theta = \| \boldsymbol \phi \|$になります．
+ただし，$\theta = \| \boldsymbol \phi \|_{2}$になります．
 
 式(\ref{eq:se3_exp_log_maps})に示す対数写像は以下のように定義されます．
 %
@@ -617,7 +617,7 @@ $\mathfrak{so}(3)$と$\mathfrak{se}(3)$は厳密にはそれぞれ$\mathbb{R}^{3
   \label{eq:so3_left_jacobian_inverse}
 \end{align}
 %
-ただし同様に$\theta = \| \boldsymbol \phi \|$となります．
+ただし同様に$\theta = \| \boldsymbol \phi \|_{2}$となります．
 なお$\log \left( T \right) \in \mathfrak{se}(3)$は$\mathbb{R}^{4 \times 4}$の行列であるため，ここから6次元のベクトル$\boldsymbol \xi$を取得する操作を以下のように定めます．
 %
 \begin{align}
@@ -674,7 +674,7 @@ $\mathfrak{so}(3)$と$\mathfrak{se}(3)$は厳密にはそれぞれ$\mathbb{R}^{3
 もし右からの摂動を考える場合には$\exp \left( \delta \boldsymbol \xi^{\wedge} \right)$を右から掛ける必要があるため注意が必要になります．
 
 もし$\boldsymbol \xi = \left( \log \left( T \right) \right)^{\vee}$と表されると仮定した場合，リー代数上での新たな状態ベクトルは$\boldsymbol \xi + \delta \boldsymbol \xi$となります．
-ここで$\delta \boldsymbol \xi$が微小変化であるとした上でBaker-Campbell-Hausdorff（BCH）展開を考えると，以下の近似式を得ることができます．
+ここで$\delta \boldsymbol \xi$が微小変化であるとした上で{\bf Baker-Campbell-Hausdorff}（BCH）展開を考えると，以下の近似式を得ることができます．
 %
 \begin{align}
   \begin{split}
@@ -724,7 +724,7 @@ $\mathfrak{so}(3)$と$\mathfrak{se}(3)$は厳密にはそれぞれ$\mathbb{R}^{3
 \end{align}
 %
 これは式(\ref{eq:se3_diff})に示すような，$\exp \left( \delta \boldsymbol \xi^{\wedge} \right) T$と$T$の差分を考えていることになり，特に$T^{-1} T = I_{4}$であることから，リー群の恒等元周りでの微小変動を考えていることになります．
-そのためベクトル空間で$f \left( {\bf x} + \Delta {\bf x} \right) - f \left( {\bf x} \right) = J \Delta {\bf x}$という式を考えていることと等価になります．
+そのためベクトル空間で$f \left( {\bf x} + \delta {\bf x} \right) - f \left( {\bf x} \right) = J \delta {\bf x}$という式を考えていることと等価になります．
 ただし$J \delta \boldsymbol \xi$は6次元のベクトルとなるため，そのままでは$I_{4}$に加算することができないので，$\left( \cdot \right)^{\wedge}$作用により対応する$\mathfrak{se}(3)$に変換していることに注意してください．
 そして，$T^{-1} \exp \left( \delta \boldsymbol \xi^{\wedge} \right) T$は以下のように書くことができます．
 %
