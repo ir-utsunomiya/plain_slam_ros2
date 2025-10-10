@@ -22,6 +22,8 @@ find_package(Eigen3 REQUIRED)
 find_package(Sophus REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
+find_package(fmt REQUIRED)
+
 
 
 # lio_3d_node
@@ -62,7 +64,7 @@ ament_target_dependencies(
   "visualization_msgs"
 )
 
-target_link_libraries(lio_3d_node yaml-cpp)
+target_link_libraries(lio_3d_node yaml-cpp Sophus::Sophus fmt::fmt)
 
 install(TARGETS lio_3d_node DESTINATION lib/${PROJECT_NAME})
 
@@ -102,7 +104,7 @@ ament_target_dependencies(
   "visualization_msgs"
 )
 
-target_link_libraries(slam_3d_node yaml-cpp)
+target_link_libraries(slam_3d_node yaml-cpp Sophus::Sophus fmt::fmt)
 
 install(TARGETS slam_3d_node DESTINATION lib/${PROJECT_NAME})
 
@@ -160,6 +162,8 @@ ament_target_dependencies(
   "rclpy"
 )
 
+target_link_libraries(lidar_lidar_calibration_node yaml-cpp Sophus::Sophus fmt::fmt)
+
 install(TARGETS lidar_lidar_calibration_node DESTINATION lib/${PROJECT_NAME})
 
 
@@ -177,5 +181,3 @@ install(
   DIRECTORY launch config
   DESTINATION share/${PROJECT_NAME}/
 )
-
-
